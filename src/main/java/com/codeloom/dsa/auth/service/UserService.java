@@ -2,6 +2,7 @@ package com.codeloom.dsa.auth.service;
 
 import com.codeloom.dsa.auth.dto.RegisterRequest;
 import com.codeloom.dsa.auth.dto.RegisterResponse;
+import com.codeloom.dsa.user.dto.CurrentUserResponse;
 import com.codeloom.dsa.user.entity.Role;
 import com.codeloom.dsa.user.entity.User;
 import com.codeloom.dsa.user.repository.RoleRepository;
@@ -9,6 +10,8 @@ import com.codeloom.dsa.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Set;
 
 @Service
 public class UserService {
@@ -40,7 +43,9 @@ public class UserService {
 
         Role userRole = roleRepository.findByName("USER")
                 .orElseThrow(() ->
-                        new IllegalStateException("USER role not found")
+                        new IllegalStateException(
+                                "USER role not found"
+                        )
                 );
 
         String passwordHash =
@@ -60,6 +65,27 @@ public class UserService {
                 savedUser.getId(),
                 savedUser.getEmail(),
                 savedUser.getUsername()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public CurrentUserResponse getCurrentUser(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("User not found")
+                );
+
+        Set<String> roles = user.getRoles()
+                .stream()
+                .map(Role::getName)
+                .collect(java.util.stream.Collectors.toSet());
+
+        return new CurrentUserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername(),
+                roles
         );
     }
 }
