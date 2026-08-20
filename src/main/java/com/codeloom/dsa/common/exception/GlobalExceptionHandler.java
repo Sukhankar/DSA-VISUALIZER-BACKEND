@@ -2,6 +2,8 @@ package com.codeloom.dsa.common.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -14,6 +16,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalArgument(
             IllegalArgumentException exception
     ) {
+
         ErrorResponse response = new ErrorResponse(
                 OffsetDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
@@ -26,25 +29,18 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
-    public record ErrorResponse(
-            OffsetDateTime timestamp,
-            int status,
-            String error,
-            String message
-    ) {
-    }
-    @ExceptionHandler(
-            org.springframework.web.bind.MethodArgumentNotValidException.class
-    )
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(
-            org.springframework.web.bind.MethodArgumentNotValidException exception
+            MethodArgumentNotValidException exception
     ) {
 
         String message = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(error ->
-                        error.getField() + ": " + error.getDefaultMessage()
+                        error.getField()
+                                + ": "
+                                + error.getDefaultMessage()
                 )
                 .findFirst()
                 .orElse("Validation failed");
@@ -60,11 +56,10 @@ public class GlobalExceptionHandler {
                 .badRequest()
                 .body(response);
     }
-    @ExceptionHandler(
-            org.springframework.security.authentication.BadCredentialsException.class
-    )
+
+    @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(
-            org.springframework.security.authentication.BadCredentialsException exception
+            BadCredentialsException exception
     ) {
 
         ErrorResponse response = new ErrorResponse(
@@ -77,5 +72,30 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(response);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(
+            ResourceNotFoundException exception
+    ) {
+
+        ErrorResponse response = new ErrorResponse(
+                OffsetDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                exception.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
+
+    public record ErrorResponse(
+            OffsetDateTime timestamp,
+            int status,
+            String error,
+            String message
+    ) {
     }
 }

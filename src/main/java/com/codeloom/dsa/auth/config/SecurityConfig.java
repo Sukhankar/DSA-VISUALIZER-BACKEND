@@ -42,10 +42,25 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
+
+                        // Public authentication endpoints
                         .requestMatchers(
                                 "/api/v1/auth/**"
                         ).permitAll()
 
+                        // Public read-only category endpoints
+                        .requestMatchers(
+                                "/api/v1/categories",
+                                "/api/v1/categories/**"
+                        ).permitAll()
+
+                        // Public read-only algorithm endpoints
+                        .requestMatchers(
+                                "/api/v1/algorithms",
+                                "/api/v1/algorithms/**"
+                        ).permitAll()
+
+                        // Everything else requires authentication
                         .anyRequest()
                         .authenticated()
                 )
