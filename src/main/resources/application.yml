@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: codeloom-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dsa_visualizer
+    username: dsa
+    password: dsa_dev_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  data:
+    redis:
+      host: localhost
+      port: 6380
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8080
