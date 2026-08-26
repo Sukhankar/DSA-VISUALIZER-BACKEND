@@ -48,17 +48,22 @@ public class SecurityConfig {
                                 "/api/v1/auth/**"
                         ).permitAll()
 
-                        // Public read-only category endpoints
+                        // Public category endpoints
                         .requestMatchers(
                                 "/api/v1/categories",
                                 "/api/v1/categories/**"
                         ).permitAll()
 
-                        // Public read-only algorithm endpoints
+                        // Public algorithm read endpoints
                         .requestMatchers(
                                 "/api/v1/algorithms",
                                 "/api/v1/algorithms/**"
                         ).permitAll()
+
+                        // Admin-only endpoints
+                        .requestMatchers(
+                                "/api/v1/admin/**"
+                        ).hasRole("ADMIN")
 
                         // Everything else requires authentication
                         .anyRequest()
