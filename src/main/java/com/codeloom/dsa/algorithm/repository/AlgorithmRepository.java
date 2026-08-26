@@ -16,6 +16,8 @@ public interface AlgorithmRepository
 
     boolean existsBySlug(String slug);
 
+    boolean existsByCategoryId(UUID categoryId);
+
     Page<Algorithm> findByCategorySlug(
             String slug,
             Pageable pageable

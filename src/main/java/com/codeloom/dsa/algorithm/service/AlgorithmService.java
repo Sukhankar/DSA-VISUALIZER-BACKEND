@@ -3,7 +3,9 @@ package com.codeloom.dsa.algorithm.service;
 import com.codeloom.dsa.algorithm.dto.AlgorithmCategoryResponse;
 import com.codeloom.dsa.algorithm.dto.AlgorithmPageResponse;
 import com.codeloom.dsa.algorithm.dto.AlgorithmResponse;
+import com.codeloom.dsa.algorithm.dto.CreateAlgorithmCategoryRequest;
 import com.codeloom.dsa.algorithm.dto.CreateAlgorithmRequest;
+import com.codeloom.dsa.algorithm.dto.UpdateAlgorithmCategoryRequest;
 import com.codeloom.dsa.algorithm.dto.UpdateAlgorithmRequest;
 import com.codeloom.dsa.algorithm.entity.Algorithm;
 import com.codeloom.dsa.algorithm.entity.AlgorithmCategory;
@@ -194,6 +196,90 @@ public class AlgorithmService {
                 );
 
         algorithmRepository.delete(algorithm);
+    }
+
+    @Transactional
+    public AlgorithmCategoryResponse createCategory(
+            CreateAlgorithmCategoryRequest request
+    ) {
+        if (categoryRepository.existsByName(request.name())) {
+            throw new IllegalArgumentException(
+                    "Category name already exists: " + request.name()
+            );
+        }
+
+        if (categoryRepository.existsBySlug(request.slug())) {
+            throw new IllegalArgumentException(
+                    "Category slug already exists: " + request.slug()
+            );
+        }
+
+        AlgorithmCategory category = new AlgorithmCategory(
+                request.name(),
+                request.slug(),
+                request.description()
+        );
+
+        AlgorithmCategory savedCategory = categoryRepository.save(category);
+
+        return mapCategory(savedCategory);
+    }
+
+    @Transactional
+    public AlgorithmCategoryResponse updateCategory(
+            String slug,
+            UpdateAlgorithmCategoryRequest request
+    ) {
+        AlgorithmCategory category = categoryRepository
+                .findBySlug(slug)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Category not found: " + slug
+                        )
+                );
+
+        if (!category.getName().equalsIgnoreCase(request.name())
+                && categoryRepository.existsByName(request.name())) {
+            throw new IllegalArgumentException(
+                    "Category name already exists: " + request.name()
+            );
+        }
+
+        if (!category.getSlug().equals(request.slug())
+                && categoryRepository.existsBySlug(request.slug())) {
+            throw new IllegalArgumentException(
+                    "Category slug already exists: " + request.slug()
+            );
+        }
+
+        category.update(
+                request.name(),
+                request.slug(),
+                request.description()
+        );
+
+        AlgorithmCategory updatedCategory = categoryRepository.save(category);
+
+        return mapCategory(updatedCategory);
+    }
+
+    @Transactional
+    public void deleteCategory(String slug) {
+        AlgorithmCategory category = categoryRepository
+                .findBySlug(slug)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Category not found: " + slug
+                        )
+                );
+
+        if (algorithmRepository.existsByCategoryId(category.getId())) {
+            throw new IllegalArgumentException(
+                    "Cannot delete category because it contains algorithms"
+            );
+        }
+
+        categoryRepository.delete(category);
     }
 
     private AlgorithmCategoryResponse mapCategory(

@@ -79,4 +79,14 @@ public class AlgorithmCategory {
     public Set<Algorithm> getAlgorithms() {
         return algorithms;
     }
+
+    public void update(
+            String name,
+            String slug,
+            String description
+    ) {
+        this.name = name;
+        this.slug = slug;
+        this.description = description;
+    }
 }
