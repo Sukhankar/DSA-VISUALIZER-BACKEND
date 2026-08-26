@@ -144,10 +144,10 @@ Expected Output:
 - [x] **Phase 3B:** Seed Baseline DSA Data (Flyway Migrations)
 - [x] **Phase 4:** Visualization Strategy Architecture
 - [x] **Phase 5A:** Sorting Algorithm Generators (Bubble, Selection, Insertion, Merge, Quick)
-- [ ] **Phase 5B:** Searching Generators (Linear Search, Binary Search)
-- [ ] **Phase 5C:** Array & String Generators (Two Sum, Kadane's Algorithm)
-- [ ] **Phase 5D:** Linked List Generators (Traversal, Reversal)
-- [ ] **Phase 5E:** Tree & Graph Generators (BST, Traversal, BFS, DFS, Dijkstra's)
+- [x] **Phase 5B:** Searching Generators (Linear Search, Binary Search)
+- [x] **Phase 5C:** Array & DP Generators (Two Sum, Kadane's Algorithm, Fibonacci DP)
+- [x] **Phase 5D:** Linked List Generators (Linked List Traversal)
+- [x] **Phase 5E:** Tree & Graph Generators (BST, Tree Traversal, BFS, DFS, Dijkstra's)
 - [ ] **Phase 6:** Advanced Custom Inputs & Constraints
 - [ ] **Phase 7:** User Progress, Bookmarks & Execution History
 - [ ] **Phase 8:** OpenAPI / Swagger Documentation
