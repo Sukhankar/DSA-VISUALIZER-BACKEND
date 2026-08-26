@@ -111,4 +111,22 @@ public class Algorithm {
     public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
+
+    public void update(
+            AlgorithmCategory category,
+            String name,
+            String slug,
+            String description,
+            Difficulty difficulty,
+            String timeComplexity,
+            String spaceComplexity
+    ) {
+        this.category = category;
+        this.name = name;
+        this.slug = slug;
+        this.description = description;
+        this.difficulty = difficulty;
+        this.timeComplexity = timeComplexity;
+        this.spaceComplexity = spaceComplexity;
+    }
 }

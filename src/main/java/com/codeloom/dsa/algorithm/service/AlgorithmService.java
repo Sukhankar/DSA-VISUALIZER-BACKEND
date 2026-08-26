@@ -3,6 +3,8 @@ package com.codeloom.dsa.algorithm.service;
 import com.codeloom.dsa.algorithm.dto.AlgorithmCategoryResponse;
 import com.codeloom.dsa.algorithm.dto.AlgorithmPageResponse;
 import com.codeloom.dsa.algorithm.dto.AlgorithmResponse;
+import com.codeloom.dsa.algorithm.dto.CreateAlgorithmRequest;
+import com.codeloom.dsa.algorithm.dto.UpdateAlgorithmRequest;
 import com.codeloom.dsa.algorithm.entity.Algorithm;
 import com.codeloom.dsa.algorithm.entity.AlgorithmCategory;
 import com.codeloom.dsa.algorithm.entity.Difficulty;
@@ -32,61 +34,52 @@ public class AlgorithmService {
     }
 
     public List<AlgorithmCategoryResponse> getAllCategories() {
+
         return categoryRepository.findAll()
                 .stream()
                 .map(this::mapCategory)
                 .toList();
     }
 
+    public List<AlgorithmResponse> getAllAlgorithms() {
+
+        return algorithmRepository.findAll()
+                .stream()
+                .map(this::mapAlgorithm)
+                .toList();
+    }
+
     public AlgorithmPageResponse getAlgorithms(
-            String category,
+            String categorySlug,
             Difficulty difficulty,
             String search,
             Pageable pageable
     ) {
+        Page<Algorithm> page;
 
-        Page<Algorithm> algorithms;
-
-        if (search != null && !search.isBlank()) {
-
-            algorithms = algorithmRepository
-                    .findByNameContainingIgnoreCase(
-                            search,
-                            pageable
-                    );
-
-        } else if (category != null && !category.isBlank()) {
-
-            algorithms = algorithmRepository
-                    .findByCategorySlug(
-                            category,
-                            pageable
-                    );
-
+        if (categorySlug != null && !categorySlug.isBlank()) {
+            page = algorithmRepository.findByCategorySlug(categorySlug, pageable);
         } else if (difficulty != null) {
-
-            algorithms = algorithmRepository
-                    .findByDifficulty(
-                            difficulty,
-                            pageable
-                    );
-
+            page = algorithmRepository.findByDifficulty(difficulty, pageable);
+        } else if (search != null && !search.isBlank()) {
+            page = algorithmRepository.findByNameContainingIgnoreCase(search, pageable);
         } else {
-
-            algorithms = algorithmRepository.findAll(pageable);
+            page = algorithmRepository.findAll(pageable);
         }
 
+        List<AlgorithmResponse> content = page.getContent()
+                .stream()
+                .map(this::mapAlgorithm)
+                .toList();
+
         return new AlgorithmPageResponse(
-                algorithms.getContent()
-                        .stream()
-                        .map(this::mapAlgorithm)
-                        .toList(),
-                algorithms.getNumber(),
-                algorithms.getSize(),
-                algorithms.getTotalElements(),
-                algorithms.getTotalPages(),
-                algorithms.isFirst(),
-                algorithms.isLast()
+                content,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast()
         );
     }
 
@@ -101,6 +94,106 @@ public class AlgorithmService {
                 );
 
         return mapAlgorithm(algorithm);
+    }
+
+    @Transactional
+    public AlgorithmResponse createAlgorithm(
+            CreateAlgorithmRequest request
+    ) {
+
+        if (algorithmRepository.existsBySlug(request.slug())) {
+            throw new IllegalArgumentException(
+                    "Algorithm slug already exists: " + request.slug()
+            );
+        }
+
+        AlgorithmCategory category = categoryRepository
+                .findBySlug(request.categorySlug())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Category not found: "
+                                        + request.categorySlug()
+                        )
+                );
+
+        Algorithm algorithm = new Algorithm(
+                category,
+                request.name(),
+                request.slug(),
+                request.description(),
+                request.difficulty(),
+                request.timeComplexity(),
+                request.spaceComplexity()
+        );
+
+        Algorithm savedAlgorithm =
+                algorithmRepository.save(algorithm);
+
+        return mapAlgorithm(savedAlgorithm);
+    }
+
+    @Transactional
+    public AlgorithmResponse updateAlgorithm(
+            String slug,
+            UpdateAlgorithmRequest request
+    ) {
+
+        Algorithm algorithm = algorithmRepository
+                .findBySlug(slug)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Algorithm not found: " + slug
+                        )
+                );
+
+        if (!algorithm.getSlug().equals(request.slug())
+                && algorithmRepository.existsBySlug(
+                request.slug()
+        )) {
+
+            throw new IllegalArgumentException(
+                    "Algorithm slug already exists: "
+                            + request.slug()
+            );
+        }
+
+        AlgorithmCategory category = categoryRepository
+                .findBySlug(request.categorySlug())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Category not found: "
+                                        + request.categorySlug()
+                        )
+                );
+
+        algorithm.update(
+                category,
+                request.name(),
+                request.slug(),
+                request.description(),
+                request.difficulty(),
+                request.timeComplexity(),
+                request.spaceComplexity()
+        );
+
+        Algorithm updatedAlgorithm =
+                algorithmRepository.save(algorithm);
+
+        return mapAlgorithm(updatedAlgorithm);
+    }
+
+    @Transactional
+    public void deleteAlgorithm(String slug) {
+
+        Algorithm algorithm = algorithmRepository
+                .findBySlug(slug)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Algorithm not found: " + slug
+                        )
+                );
+
+        algorithmRepository.delete(algorithm);
     }
 
     private AlgorithmCategoryResponse mapCategory(
