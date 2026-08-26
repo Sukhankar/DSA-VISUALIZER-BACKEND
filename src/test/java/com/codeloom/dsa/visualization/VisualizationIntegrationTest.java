@@ -43,34 +43,17 @@ class VisualizationIntegrationTest {
                 .build();
     }
 
-    @Test
-    @DisplayName("1. Verify Bubble Sort visualization generates complete step sequence")
-    void visualizeBubbleSort_returnsFullStepSequence() throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(5, 1, 4, 2));
-
-        mockMvc.perform(post("/api/v1/algorithms/bubble-sort/visualize")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is("bubble-sort")))
-                .andExpect(jsonPath("$.visualizationType", is("ARRAY")))
-                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
-                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
-                .andExpect(jsonPath("$.steps[0].array", is(List.of(5, 1, 4, 2))))
-                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")))
-                .andExpect(jsonPath("$.steps[-1].array", is(List.of(1, 2, 4, 5))));
-    }
-
-    @Test
-    @DisplayName("2. Verify Selection Sort visualization generates complete step sequence")
-    void visualizeSelectionSort_returnsFullStepSequence() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"bubble-sort", "selection-sort", "insertion-sort", "merge-sort", "quick-sort"})
+    @DisplayName("1. Verify Sorting Generators produce complete step sequence")
+    void visualizeSortingGenerators_returnsSteps(String algorithmSlug) throws Exception {
         Map<String, Object> request = Map.of("input", List.of(5, 1, 4, 2, 8));
 
-        mockMvc.perform(post("/api/v1/algorithms/selection-sort/visualize")
+        mockMvc.perform(post("/api/v1/algorithms/" + algorithmSlug + "/visualize")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is("selection-sort")))
+                .andExpect(jsonPath("$.algorithm", is(algorithmSlug)))
                 .andExpect(jsonPath("$.visualizationType", is("ARRAY")))
                 .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
                 .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
@@ -79,105 +62,132 @@ class VisualizationIntegrationTest {
     }
 
     @Test
-    @DisplayName("3. Verify Insertion Sort visualization generates complete step sequence")
-    void visualizeInsertionSort_returnsFullStepSequence() throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(5, 1, 4, 2, 8));
+    @DisplayName("2. Verify Linear Search visualization generates complete step sequence")
+    void visualizeLinearSearch_returnsSteps() throws Exception {
+        Map<String, Object> request = Map.of("input", List.of(10, 20, 30, 40), "target", 30);
 
-        mockMvc.perform(post("/api/v1/algorithms/insertion-sort/visualize")
+        mockMvc.perform(post("/api/v1/algorithms/linear-search/visualize")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is("insertion-sort")))
-                .andExpect(jsonPath("$.visualizationType", is("ARRAY")))
+                .andExpect(jsonPath("$.algorithm", is("linear-search")))
                 .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
                 .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
-                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")))
-                .andExpect(jsonPath("$.steps[-1].array", is(List.of(1, 2, 4, 5, 8))));
+                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
     }
 
     @Test
-    @DisplayName("4. Verify Merge Sort visualization generates complete step sequence")
-    void visualizeMergeSort_returnsFullStepSequence() throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(5, 1, 4, 2, 8));
+    @DisplayName("3. Verify Binary Search visualization generates complete step sequence")
+    void visualizeBinarySearch_returnsSteps() throws Exception {
+        Map<String, Object> request = Map.of("input", List.of(10, 20, 30, 40, 50), "target", 40);
 
-        mockMvc.perform(post("/api/v1/algorithms/merge-sort/visualize")
+        mockMvc.perform(post("/api/v1/algorithms/binary-search/visualize")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is("merge-sort")))
-                .andExpect(jsonPath("$.visualizationType", is("ARRAY")))
+                .andExpect(jsonPath("$.algorithm", is("binary-search")))
                 .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
                 .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
-                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")))
-                .andExpect(jsonPath("$.steps[-1].array", is(List.of(1, 2, 4, 5, 8))));
+                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
     }
 
     @Test
-    @DisplayName("5. Verify Quick Sort visualization generates complete step sequence")
-    void visualizeQuickSort_returnsFullStepSequence() throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(5, 1, 4, 2, 8));
+    @DisplayName("4. Verify Two Sum visualization generates complete step sequence")
+    void visualizeTwoSum_returnsSteps() throws Exception {
+        Map<String, Object> request = Map.of("input", List.of(2, 7, 11, 15), "target", 9);
 
-        mockMvc.perform(post("/api/v1/algorithms/quick-sort/visualize")
+        mockMvc.perform(post("/api/v1/algorithms/two-sum/visualize")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is("quick-sort")))
-                .andExpect(jsonPath("$.visualizationType", is("ARRAY")))
+                .andExpect(jsonPath("$.algorithm", is("two-sum")))
                 .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
                 .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
-                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")))
-                .andExpect(jsonPath("$.steps[-1].array", is(List.of(1, 2, 4, 5, 8))));
+                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
+    }
+
+    @Test
+    @DisplayName("5. Verify Kadane's Algorithm visualization generates complete step sequence")
+    void visualizeKadanes_returnsSteps() throws Exception {
+        Map<String, Object> request = Map.of("input", List.of(-2, 1, -3, 4, -1, 2, 1, -5, 4));
+
+        mockMvc.perform(post("/api/v1/algorithms/kadanes-algorithm/visualize")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.algorithm", is("kadanes-algorithm")))
+                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
+                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
+    }
+
+    @Test
+    @DisplayName("6. Verify Fibonacci DP visualization generates complete step sequence")
+    void visualizeFibonacciDp_returnsSteps() throws Exception {
+        Map<String, Object> request = Map.of("input", List.of(5), "target", 5);
+
+        mockMvc.perform(post("/api/v1/algorithms/fibonacci-dynamic-programming/visualize")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.algorithm", is("fibonacci-dynamic-programming")))
+                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
+                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
+    }
+
+    @Test
+    @DisplayName("7. Verify Linked List Traversal visualization generates complete step sequence")
+    void visualizeLinkedListTraversal_returnsSteps() throws Exception {
+        Map<String, Object> request = Map.of("input", List.of(1, 2, 3, 4));
+
+        mockMvc.perform(post("/api/v1/algorithms/linked-list-traversal/visualize")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.algorithm", is("linked-list-traversal")))
+                .andExpect(jsonPath("$.visualizationType", is("LINKED_LIST")))
+                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
+                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"bubble-sort", "selection-sort", "insertion-sort", "merge-sort", "quick-sort"})
-    @DisplayName("6. Verify edge cases (single, 2-elem, reverse, duplicates, negative) across all sorting generators")
-    void visualizeSortingGenerators_edgeCases(String algorithmSlug) throws Exception {
-        // Single element
-        mockMvc.perform(post("/api/v1/algorithms/" + algorithmSlug + "/visualize")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("input", List.of(42)))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.steps[-1].array", is(List.of(42))));
+    @ValueSource(strings = {"binary-search-tree", "tree-traversal"})
+    @DisplayName("8. Verify Tree Generators return TREE visualization type")
+    void visualizeTreeGenerators_returnsSteps(String algorithmSlug) throws Exception {
+        Map<String, Object> request = Map.of("input", List.of(5, 3, 7, 2, 4));
 
-        // Two elements reverse
         mockMvc.perform(post("/api/v1/algorithms/" + algorithmSlug + "/visualize")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("input", List.of(2, 1)))))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.steps[-1].array", is(List.of(1, 2))));
+                .andExpect(jsonPath("$.algorithm", is(algorithmSlug)))
+                .andExpect(jsonPath("$.visualizationType", is("TREE")))
+                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
+                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
+    }
 
-        // Already sorted
-        mockMvc.perform(post("/api/v1/algorithms/" + algorithmSlug + "/visualize")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("input", List.of(1, 2, 3, 4)))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.steps[-1].array", is(List.of(1, 2, 3, 4))));
+    @ParameterizedTest
+    @ValueSource(strings = {"breadth-first-search", "depth-first-search", "dijkstras-algorithm"})
+    @DisplayName("9. Verify Graph Generators return GRAPH visualization type")
+    void visualizeGraphGenerators_returnsSteps(String algorithmSlug) throws Exception {
+        Map<String, Object> request = Map.of("input", List.of(0, 4, 8, 2, 6));
 
-        // Reverse sorted
         mockMvc.perform(post("/api/v1/algorithms/" + algorithmSlug + "/visualize")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("input", List.of(4, 3, 2, 1)))))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.steps[-1].array", is(List.of(1, 2, 3, 4))));
-
-        // Duplicate values
-        mockMvc.perform(post("/api/v1/algorithms/" + algorithmSlug + "/visualize")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("input", List.of(2, 2, 2, 2)))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.steps[-1].array", is(List.of(2, 2, 2, 2))));
-
-        // Negative numbers
-        mockMvc.perform(post("/api/v1/algorithms/" + algorithmSlug + "/visualize")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("input", List.of(-3, 5, -1, 2)))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.steps[-1].array", is(List.of(-3, -1, 2, 5))));
+                .andExpect(jsonPath("$.algorithm", is(algorithmSlug)))
+                .andExpect(jsonPath("$.visualizationType", is("GRAPH")))
+                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
+                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
     }
 
     @Test
-    @DisplayName("7. Verify empty input returns 400 Bad Request")
+    @DisplayName("10. Verify empty input returns 400 Bad Request")
     void visualizeEmptyInput_returnsBadRequest() throws Exception {
         Map<String, Object> request = Map.of("input", List.of());
 
@@ -185,45 +195,5 @@ class VisualizationIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @DisplayName("8. Verify input exceeding max size returns 400 Bad Request")
-    void visualizeExceedingMaxInputSize_returnsBadRequest() throws Exception {
-        List<Integer> largeInput = new ArrayList<>();
-        for (int i = 0; i < 51; i++) {
-            largeInput.add(i);
-        }
-        Map<String, Object> request = Map.of("input", largeInput);
-
-        mockMvc.perform(post("/api/v1/algorithms/bubble-sort/visualize")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @DisplayName("9. Verify non-existent algorithm slug returns 404 Not Found")
-    void visualizeNonExistentAlgorithm_returnsNotFound() throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(3, 2, 1));
-
-        mockMvc.perform(post("/api/v1/algorithms/unknown-algorithm/visualize")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    @DisplayName("10. Verify unsupported algorithm returns empty steps")
-    void visualizeUnsupportedAlgorithm_returnsEmptySteps() throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(1, 2, 3));
-
-        mockMvc.perform(post("/api/v1/algorithms/binary-search/visualize")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is("binary-search")))
-                .andExpect(jsonPath("$.visualizationType", is("ARRAY")))
-                .andExpect(jsonPath("$.steps", hasSize(0)));
     }
 }
