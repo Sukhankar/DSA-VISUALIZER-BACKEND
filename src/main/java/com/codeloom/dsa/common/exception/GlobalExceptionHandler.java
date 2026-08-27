@@ -16,7 +16,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalArgument(
             IllegalArgumentException exception
     ) {
-
         ErrorResponse response = new ErrorResponse(
                 OffsetDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
@@ -29,11 +28,26 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(
+            IllegalStateException exception
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                OffsetDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                exception.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(
             MethodArgumentNotValidException exception
     ) {
-
         String message = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -61,7 +75,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadCredentials(
             BadCredentialsException exception
     ) {
-
         ErrorResponse response = new ErrorResponse(
                 OffsetDateTime.now(),
                 HttpStatus.UNAUTHORIZED.value(),
@@ -78,7 +91,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleResourceNotFound(
             ResourceNotFoundException exception
     ) {
-
         ErrorResponse response = new ErrorResponse(
                 OffsetDateTime.now(),
                 HttpStatus.NOT_FOUND.value(),
