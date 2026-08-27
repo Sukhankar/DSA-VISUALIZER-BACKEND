@@ -22,10 +22,14 @@ public class LinearSearchGenerator implements VisualizationGenerator {
 
     @Override
     public VisualizationResponse generate(String algorithmSlug, VisualizationRequest request) {
+        if (request.target() == null) {
+            throw new IllegalArgumentException("Linear Search requires a target value to be specified");
+        }
+
         List<Integer> array = new ArrayList<>(request.input());
         List<VisualizationStep> steps = new ArrayList<>();
         int stepNum = 1;
-        int target = request.target() != null ? request.target() : (array.isEmpty() ? 0 : array.get(array.size() - 1));
+        int target = request.target();
 
         // 1. Initial State
         steps.add(new VisualizationStep(
@@ -33,11 +37,13 @@ public class LinearSearchGenerator implements VisualizationGenerator {
                 ActionType.INITIAL,
                 List.of(),
                 new ArrayList<>(array),
-                "Initial array state. Target to search: " + target
+                "Starting Linear Search for target " + target
         ));
 
-        // 2. Linear Search
+        // 2. Linear Search Loop
         boolean found = false;
+        int foundIndex = -1;
+
         for (int i = 0; i < array.size(); i++) {
             int val = array.get(i);
 
@@ -46,29 +52,40 @@ public class LinearSearchGenerator implements VisualizationGenerator {
                     ActionType.COMPARE,
                     List.of(i),
                     new ArrayList<>(array),
-                    String.format("Comparing element %d at index %d with target %d", val, i, target)
+                    String.format("Comparing target %d with value %d at index %d", target, val, i)
             ));
 
             if (val == target) {
+                found = true;
+                foundIndex = i;
                 steps.add(new VisualizationStep(
                         stepNum++,
-                        ActionType.SELECT,
+                        ActionType.FOUND,
                         List.of(i),
                         new ArrayList<>(array),
-                        String.format("Found target %d at index %d!", target, i)
+                        String.format("Target %d found at index %d", target, i)
                 ));
-                found = true;
                 break;
             }
+        }
+
+        if (!found) {
+            steps.add(new VisualizationStep(
+                    stepNum++,
+                    ActionType.NOT_FOUND,
+                    List.of(),
+                    new ArrayList<>(array),
+                    String.format("Target %d not found in the array", target)
+            ));
         }
 
         // 3. Completion Step
         steps.add(new VisualizationStep(
                 stepNum,
                 ActionType.COMPLETE,
-                List.of(),
+                foundIndex != -1 ? List.of(foundIndex) : List.of(),
                 new ArrayList<>(array),
-                found ? "Linear Search completed! Target found." : "Linear Search completed! Target " + target + " not found."
+                found ? "Linear Search completed" : "Linear Search completed: target not found"
         ));
 
         return new VisualizationResponse(

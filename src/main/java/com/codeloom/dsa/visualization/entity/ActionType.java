@@ -10,5 +10,7 @@ public enum ActionType {
     INSERT,
     DELETE,
     UPDATE,
+    FOUND,
+    NOT_FOUND,
     COMPLETE
 }

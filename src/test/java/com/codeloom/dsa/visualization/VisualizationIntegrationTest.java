@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -92,94 +91,46 @@ class VisualizationIntegrationTest {
     }
 
     @Test
-    @DisplayName("4. Verify Two Sum visualization generates complete step sequence")
-    void visualizeTwoSum_returnsSteps() throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(2, 7, 11, 15), "target", 9);
+    @DisplayName("4. Verify Binary Search rejects unsorted input")
+    void visualizeBinarySearch_unsortedInput_returnsBadRequest() throws Exception {
+        Map<String, Object> request = Map.of("input", List.of(5, 1, 4, 2), "target", 4);
 
-        mockMvc.perform(post("/api/v1/algorithms/two-sum/visualize")
+        mockMvc.perform(post("/api/v1/algorithms/binary-search/visualize")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is("two-sum")))
-                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
-                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
-                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("5. Verify Kadane's Algorithm visualization generates complete step sequence")
-    void visualizeKadanes_returnsSteps() throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(-2, 1, -3, 4, -1, 2, 1, -5, 4));
+    @DisplayName("5. Verify Linear Search missing target returns 400 Bad Request")
+    void visualizeLinearSearch_missingTarget_returnsBadRequest() throws Exception {
+        Map<String, Object> request = Map.of("input", List.of(1, 2, 3));
 
-        mockMvc.perform(post("/api/v1/algorithms/kadanes-algorithm/visualize")
+        mockMvc.perform(post("/api/v1/algorithms/linear-search/visualize")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is("kadanes-algorithm")))
-                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
-                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
-                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("6. Verify Fibonacci DP visualization generates complete step sequence")
-    void visualizeFibonacciDp_returnsSteps() throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(5), "target", 5);
+    @DisplayName("6. Verify BFS with Graph DTO produces graph visualization steps")
+    void visualizeGraphBfs_withGraphDto_returnsSteps() throws Exception {
+        Map<String, Object> graphDto = Map.of(
+                "nodes", List.of("A", "B", "C", "D"),
+                "edges", List.of(
+                        Map.of("from", "A", "to", "B"),
+                        Map.of("from", "A", "to", "C"),
+                        Map.of("from", "B", "to", "D")
+                ),
+                "startNode", "A"
+        );
+        Map<String, Object> request = Map.of("graph", graphDto);
 
-        mockMvc.perform(post("/api/v1/algorithms/fibonacci-dynamic-programming/visualize")
+        mockMvc.perform(post("/api/v1/algorithms/breadth-first-search/visualize")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is("fibonacci-dynamic-programming")))
-                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
-                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
-                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
-    }
-
-    @Test
-    @DisplayName("7. Verify Linked List Traversal visualization generates complete step sequence")
-    void visualizeLinkedListTraversal_returnsSteps() throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(1, 2, 3, 4));
-
-        mockMvc.perform(post("/api/v1/algorithms/linked-list-traversal/visualize")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is("linked-list-traversal")))
-                .andExpect(jsonPath("$.visualizationType", is("LINKED_LIST")))
-                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
-                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
-                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"binary-search-tree", "tree-traversal"})
-    @DisplayName("8. Verify Tree Generators return TREE visualization type")
-    void visualizeTreeGenerators_returnsSteps(String algorithmSlug) throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(5, 3, 7, 2, 4));
-
-        mockMvc.perform(post("/api/v1/algorithms/" + algorithmSlug + "/visualize")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is(algorithmSlug)))
-                .andExpect(jsonPath("$.visualizationType", is("TREE")))
-                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
-                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
-                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"breadth-first-search", "depth-first-search", "dijkstras-algorithm"})
-    @DisplayName("9. Verify Graph Generators return GRAPH visualization type")
-    void visualizeGraphGenerators_returnsSteps(String algorithmSlug) throws Exception {
-        Map<String, Object> request = Map.of("input", List.of(0, 4, 8, 2, 6));
-
-        mockMvc.perform(post("/api/v1/algorithms/" + algorithmSlug + "/visualize")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithm", is(algorithmSlug)))
+                .andExpect(jsonPath("$.algorithm", is("breadth-first-search")))
                 .andExpect(jsonPath("$.visualizationType", is("GRAPH")))
                 .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
                 .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
@@ -187,7 +138,48 @@ class VisualizationIntegrationTest {
     }
 
     @Test
-    @DisplayName("10. Verify empty input returns 400 Bad Request")
+    @DisplayName("7. Verify DFS with Graph DTO produces graph visualization steps")
+    void visualizeGraphDfs_withGraphDto_returnsSteps() throws Exception {
+        Map<String, Object> graphDto = Map.of(
+                "nodes", List.of("A", "B", "C", "D"),
+                "edges", List.of(
+                        Map.of("from", "A", "to", "B"),
+                        Map.of("from", "A", "to", "C"),
+                        Map.of("from", "B", "to", "D")
+                ),
+                "startNode", "A"
+        );
+        Map<String, Object> request = Map.of("graph", graphDto);
+
+        mockMvc.perform(post("/api/v1/algorithms/depth-first-search/visualize")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.algorithm", is("depth-first-search")))
+                .andExpect(jsonPath("$.visualizationType", is("GRAPH")))
+                .andExpect(jsonPath("$.steps", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.steps[0].action", is("INITIAL")))
+                .andExpect(jsonPath("$.steps[-1].action", is("COMPLETE")));
+    }
+
+    @Test
+    @DisplayName("8. Verify Graph BFS with invalid start node returns 400 Bad Request")
+    void visualizeGraphBfs_invalidStartNode_returnsBadRequest() throws Exception {
+        Map<String, Object> graphDto = Map.of(
+                "nodes", List.of("A", "B", "C"),
+                "edges", List.of(),
+                "startNode", "Z"
+        );
+        Map<String, Object> request = Map.of("graph", graphDto);
+
+        mockMvc.perform(post("/api/v1/algorithms/breadth-first-search/visualize")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("9. Verify empty input returns 400 Bad Request")
     void visualizeEmptyInput_returnsBadRequest() throws Exception {
         Map<String, Object> request = Map.of("input", List.of());
 

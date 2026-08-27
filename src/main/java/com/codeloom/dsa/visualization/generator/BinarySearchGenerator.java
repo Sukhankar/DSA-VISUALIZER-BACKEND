@@ -8,7 +8,6 @@ import com.codeloom.dsa.visualization.entity.VisualizationType;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -23,14 +22,22 @@ public class BinarySearchGenerator implements VisualizationGenerator {
 
     @Override
     public VisualizationResponse generate(String algorithmSlug, VisualizationRequest request) {
+        if (request.target() == null) {
+            throw new IllegalArgumentException("Binary Search requires a target value to be specified");
+        }
+
         List<Integer> array = new ArrayList<>(request.input());
+
+        // Validate that input array is sorted in ascending order
+        for (int i = 0; i < array.size() - 1; i++) {
+            if (array.get(i) > array.get(i + 1)) {
+                throw new IllegalArgumentException("Binary Search requires the input array to be sorted in ascending order");
+            }
+        }
+
         List<VisualizationStep> steps = new ArrayList<>();
         int stepNum = 1;
-
-        // Ensure array is sorted for Binary Search
-        Collections.sort(array);
-
-        int target = request.target() != null ? request.target() : (array.isEmpty() ? 0 : array.get(array.size() - 1));
+        int target = request.target();
 
         // 1. Initial State
         steps.add(new VisualizationStep(
@@ -38,13 +45,14 @@ public class BinarySearchGenerator implements VisualizationGenerator {
                 ActionType.INITIAL,
                 List.of(),
                 new ArrayList<>(array),
-                "Sorted array for Binary Search. Target: " + target
+                "Starting Binary Search for target " + target
         ));
 
         // 2. Binary Search Logic
         int low = 0;
         int high = array.size() - 1;
         boolean found = false;
+        int foundIndex = -1;
 
         while (low <= high) {
             int mid = low + (high - low) / 2;
@@ -52,38 +60,31 @@ public class BinarySearchGenerator implements VisualizationGenerator {
 
             steps.add(new VisualizationStep(
                     stepNum++,
-                    ActionType.SELECT,
+                    ActionType.COMPARE,
                     List.of(low, mid, high),
                     new ArrayList<>(array),
-                    String.format("Pointers at low=%d (%d), mid=%d (%d), high=%d (%d)", low, array.get(low), mid, midVal, high, array.get(high))
-            ));
-
-            steps.add(new VisualizationStep(
-                    stepNum++,
-                    ActionType.COMPARE,
-                    List.of(mid),
-                    new ArrayList<>(array),
-                    String.format("Comparing mid element %d at index %d with target %d", midVal, mid, target)
+                    String.format("Comparing target %d with middle value %d at index %d [low=%d, high=%d]", target, midVal, mid, low, high)
             ));
 
             if (midVal == target) {
+                found = true;
+                foundIndex = mid;
                 steps.add(new VisualizationStep(
                         stepNum++,
-                        ActionType.SELECT,
+                        ActionType.FOUND,
                         List.of(mid),
                         new ArrayList<>(array),
-                        String.format("Found target %d at index %d!", target, mid)
+                        String.format("Target %d found at index %d", target, mid)
                 ));
-                found = true;
                 break;
             } else if (midVal < target) {
                 low = mid + 1;
                 steps.add(new VisualizationStep(
                         stepNum++,
                         ActionType.UPDATE,
-                        List.of(Math.min(low, array.size() - 1), high),
+                        List.of(Math.min(low, Math.max(0, array.size() - 1)), high),
                         new ArrayList<>(array),
-                        String.format("Target %d > %d. Shifting search range to right [low=%d, high=%d]", target, midVal, low, high)
+                        String.format("Target %d > %d. Adjusting search range to right half [low=%d, high=%d]", target, midVal, low, high)
                 ));
             } else {
                 high = mid - 1;
@@ -92,18 +93,28 @@ public class BinarySearchGenerator implements VisualizationGenerator {
                         ActionType.UPDATE,
                         List.of(low, Math.max(0, high)),
                         new ArrayList<>(array),
-                        String.format("Target %d < %d. Shifting search range to left [low=%d, high=%d]", target, midVal, low, high)
+                        String.format("Target %d < %d. Adjusting search range to left half [low=%d, high=%d]", target, midVal, low, high)
                 ));
             }
+        }
+
+        if (!found) {
+            steps.add(new VisualizationStep(
+                    stepNum++,
+                    ActionType.NOT_FOUND,
+                    List.of(),
+                    new ArrayList<>(array),
+                    String.format("Target %d not found in the array", target)
+            ));
         }
 
         // 3. Completion Step
         steps.add(new VisualizationStep(
                 stepNum,
                 ActionType.COMPLETE,
-                List.of(),
+                foundIndex != -1 ? List.of(foundIndex) : List.of(),
                 new ArrayList<>(array),
-                found ? "Binary Search completed! Target found." : "Binary Search completed! Target " + target + " not found."
+                found ? "Binary Search completed" : "Binary Search completed: target not found"
         ));
 
         return new VisualizationResponse(

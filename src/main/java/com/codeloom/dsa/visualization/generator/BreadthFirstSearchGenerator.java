@@ -1,5 +1,7 @@
 package com.codeloom.dsa.visualization.generator;
 
+import com.codeloom.dsa.visualization.dto.GraphEdgeDto;
+import com.codeloom.dsa.visualization.dto.GraphVisualizationRequest;
 import com.codeloom.dsa.visualization.dto.VisualizationRequest;
 import com.codeloom.dsa.visualization.dto.VisualizationResponse;
 import com.codeloom.dsa.visualization.dto.VisualizationStep;
@@ -7,10 +9,7 @@ import com.codeloom.dsa.visualization.entity.ActionType;
 import com.codeloom.dsa.visualization.entity.VisualizationType;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class BreadthFirstSearchGenerator implements VisualizationGenerator {
@@ -24,12 +23,130 @@ public class BreadthFirstSearchGenerator implements VisualizationGenerator {
 
     @Override
     public VisualizationResponse generate(String algorithmSlug, VisualizationRequest request) {
-        List<Integer> array = new ArrayList<>(request.input());
+        if (request.graph() != null) {
+            return generateGraphBfs(request.graph());
+        }
+
+        if (request.input() == null || request.input().isEmpty()) {
+            throw new IllegalArgumentException("Breadth-First Search requires graph payload or non-empty input list");
+        }
+
+        return generateArrayBfs(request.input());
+    }
+
+    private VisualizationResponse generateGraphBfs(GraphVisualizationRequest graph) {
+        if (graph.nodes() == null || graph.nodes().isEmpty()) {
+            throw new IllegalArgumentException("Graph nodes list must not be empty");
+        }
+        if (graph.startNode() == null || !graph.nodes().contains(graph.startNode())) {
+            throw new IllegalArgumentException("Start node must be present in graph nodes");
+        }
+
+        // Build deterministic adjacency list based on input edge order
+        Map<String, List<String>> adjList = new LinkedHashMap<>();
+        for (String node : graph.nodes()) {
+            if (node == null) {
+                throw new IllegalArgumentException("Graph contains null node value");
+            }
+            adjList.put(node, new ArrayList<>());
+        }
+
+        if (graph.edges() != null) {
+            for (GraphEdgeDto edge : graph.edges()) {
+                if (edge.from() == null || edge.to() == null || !adjList.containsKey(edge.from()) || !adjList.containsKey(edge.to())) {
+                    throw new IllegalArgumentException("Edge references an unknown or null graph node");
+                }
+                adjList.get(edge.from()).add(edge.to());
+            }
+        }
+
+        List<VisualizationStep> steps = new ArrayList<>();
+        int stepNum = 1;
+
+        Queue<String> queue = new ArrayDeque<>();
+        Set<String> visited = new LinkedHashSet<>();
+
+        String startNode = graph.startNode();
+
+        // 1. Initial Step
+        steps.add(new VisualizationStep(
+                stepNum++,
+                ActionType.INITIAL,
+                List.of(),
+                List.of(),
+                null,
+                List.of(),
+                List.of(startNode),
+                "Starting Breadth-First Search from node " + startNode
+        ));
+
+        visited.add(startNode);
+        queue.add(startNode);
+
+        while (!queue.isEmpty()) {
+            String curr = queue.poll();
+
+            steps.add(new VisualizationStep(
+                    stepNum++,
+                    ActionType.VISIT,
+                    List.of(),
+                    List.of(),
+                    curr,
+                    new ArrayList<>(visited),
+                    new ArrayList<>(queue),
+                    "Visiting node " + curr
+            ));
+
+            List<String> neighbors = adjList.getOrDefault(curr, List.of());
+            List<String> newlyAdded = new ArrayList<>();
+
+            for (String nbr : neighbors) {
+                if (!visited.contains(nbr)) {
+                    visited.add(nbr);
+                    queue.add(nbr);
+                    newlyAdded.add(nbr);
+                }
+            }
+
+            if (!newlyAdded.isEmpty()) {
+                steps.add(new VisualizationStep(
+                        stepNum++,
+                        ActionType.INSERT,
+                        List.of(),
+                        List.of(),
+                        curr,
+                        new ArrayList<>(visited),
+                        new ArrayList<>(queue),
+                        "Added neighbor(s) " + newlyAdded + " to the queue"
+                ));
+            }
+        }
+
+        // 3. Complete Step
+        steps.add(new VisualizationStep(
+                stepNum,
+                ActionType.COMPLETE,
+                List.of(),
+                List.of(),
+                null,
+                new ArrayList<>(visited),
+                List.of(),
+                "Breadth-First Search completed! Traversal order: " + new ArrayList<>(visited)
+        ));
+
+        return new VisualizationResponse(
+                SLUG,
+                VisualizationType.GRAPH,
+                steps
+        );
+    }
+
+    private VisualizationResponse generateArrayBfs(List<Integer> input) {
+        List<Integer> array = new ArrayList<>(input);
         List<VisualizationStep> steps = new ArrayList<>();
         int stepNum = 1;
         int n = array.size();
 
-        // 1. Initial State
         steps.add(new VisualizationStep(
                 stepNum++,
                 ActionType.INITIAL,
@@ -38,7 +155,6 @@ public class BreadthFirstSearchGenerator implements VisualizationGenerator {
                 "Initial Graph BFS. Start vertex at index 0"
         ));
 
-        // 2. BFS Queue Logic
         Deque<Integer> queue = new ArrayDeque<>();
         boolean[] visited = new boolean[n];
 
@@ -64,7 +180,6 @@ public class BreadthFirstSearchGenerator implements VisualizationGenerator {
                     String.format("Dequeued and visited vertex %d (val=%d)", curr, array.get(curr))
             ));
 
-            // Neighbors in adjacency list representation
             int left = 2 * curr + 1;
             int right = 2 * curr + 2;
 
@@ -93,7 +208,6 @@ public class BreadthFirstSearchGenerator implements VisualizationGenerator {
             }
         }
 
-        // 3. Completion Step
         steps.add(new VisualizationStep(
                 stepNum,
                 ActionType.COMPLETE,

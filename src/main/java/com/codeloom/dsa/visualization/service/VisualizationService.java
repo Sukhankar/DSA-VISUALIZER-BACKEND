@@ -35,7 +35,12 @@ public class VisualizationService {
         algorithmRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Algorithm not found with slug: " + slug));
 
-        // 2. Find supporting generator
+        // 2. Validate request input payload
+        if (request.graph() == null && (request.input() == null || request.input().isEmpty())) {
+            throw new IllegalArgumentException("Input list must not be empty");
+        }
+
+        // 3. Find supporting generator
         return generators.stream()
                 .filter(g -> g.supports(slug))
                 .findFirst()

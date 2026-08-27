@@ -1,5 +1,7 @@
 package com.codeloom.dsa.visualization.generator;
 
+import com.codeloom.dsa.visualization.dto.GraphEdgeDto;
+import com.codeloom.dsa.visualization.dto.GraphVisualizationRequest;
 import com.codeloom.dsa.visualization.dto.VisualizationRequest;
 import com.codeloom.dsa.visualization.dto.VisualizationResponse;
 import com.codeloom.dsa.visualization.dto.VisualizationStep;
@@ -7,8 +9,7 @@ import com.codeloom.dsa.visualization.entity.ActionType;
 import com.codeloom.dsa.visualization.entity.VisualizationType;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class DepthFirstSearchGenerator implements VisualizationGenerator {
@@ -22,12 +23,120 @@ public class DepthFirstSearchGenerator implements VisualizationGenerator {
 
     @Override
     public VisualizationResponse generate(String algorithmSlug, VisualizationRequest request) {
-        List<Integer> array = new ArrayList<>(request.input());
+        if (request.graph() != null) {
+            return generateGraphDfs(request.graph());
+        }
+
+        if (request.input() == null || request.input().isEmpty()) {
+            throw new IllegalArgumentException("Depth-First Search requires graph payload or non-empty input list");
+        }
+
+        return generateArrayDfs(request.input());
+    }
+
+    private VisualizationResponse generateGraphDfs(GraphVisualizationRequest graph) {
+        if (graph.nodes() == null || graph.nodes().isEmpty()) {
+            throw new IllegalArgumentException("Graph nodes list must not be empty");
+        }
+        if (graph.startNode() == null || !graph.nodes().contains(graph.startNode())) {
+            throw new IllegalArgumentException("Start node must be present in graph nodes");
+        }
+
+        Map<String, List<String>> adjList = new LinkedHashMap<>();
+        for (String node : graph.nodes()) {
+            if (node == null) {
+                throw new IllegalArgumentException("Graph contains null node value");
+            }
+            adjList.put(node, new ArrayList<>());
+        }
+
+        if (graph.edges() != null) {
+            for (GraphEdgeDto edge : graph.edges()) {
+                if (edge.from() == null || edge.to() == null || !adjList.containsKey(edge.from()) || !adjList.containsKey(edge.to())) {
+                    throw new IllegalArgumentException("Edge references an unknown or null graph node");
+                }
+                adjList.get(edge.from()).add(edge.to());
+            }
+        }
+
+        List<VisualizationStep> steps = new ArrayList<>();
+        int stepNum = 1;
+
+        Set<String> visited = new LinkedHashSet<>();
+        Deque<String> stack = new ArrayDeque<>();
+        int[] stepCounter = {stepNum};
+
+        String startNode = graph.startNode();
+
+        // 1. Initial Step (frontier[0] = bottom, frontier[last] = top)
+        steps.add(new VisualizationStep(
+                stepCounter[0]++,
+                ActionType.INITIAL,
+                List.of(),
+                List.of(),
+                null,
+                List.of(),
+                List.of(startNode),
+                "Starting Depth-First Search from node " + startNode
+        ));
+
+        dfsRecursive(startNode, adjList, visited, stack, steps, stepCounter);
+
+        // 3. Complete Step
+        steps.add(new VisualizationStep(
+                stepCounter[0],
+                ActionType.COMPLETE,
+                List.of(),
+                List.of(),
+                null,
+                new ArrayList<>(visited),
+                List.of(),
+                "Depth-First Search completed! Traversal order: " + new ArrayList<>(visited)
+        ));
+
+        return new VisualizationResponse(
+                SLUG,
+                VisualizationType.GRAPH,
+                steps
+        );
+    }
+
+    private void dfsRecursive(String curr, Map<String, List<String>> adjList, Set<String> visited,
+                              Deque<String> stack, List<VisualizationStep> steps, int[] stepCounter) {
+        visited.add(curr);
+        stack.push(curr);
+
+        // Active call stack representation: bottom at index 0, top at last index
+        List<String> activeStack = new ArrayList<>(stack);
+        Collections.reverse(activeStack);
+
+        steps.add(new VisualizationStep(
+                stepCounter[0]++,
+                ActionType.VISIT,
+                List.of(),
+                List.of(),
+                curr,
+                new ArrayList<>(visited),
+                activeStack,
+                "Visiting node " + curr + " (stack top)"
+        ));
+
+        List<String> neighbors = adjList.getOrDefault(curr, List.of());
+        for (String nbr : neighbors) {
+            if (!visited.contains(nbr)) {
+                dfsRecursive(nbr, adjList, visited, stack, steps, stepCounter);
+            }
+        }
+
+        stack.pop();
+    }
+
+    private VisualizationResponse generateArrayDfs(List<Integer> input) {
+        List<Integer> array = new ArrayList<>(input);
         List<VisualizationStep> steps = new ArrayList<>();
         int stepNum = 1;
         int n = array.size();
 
-        // 1. Initial State
         steps.add(new VisualizationStep(
                 stepNum++,
                 ActionType.INITIAL,
@@ -36,13 +145,11 @@ public class DepthFirstSearchGenerator implements VisualizationGenerator {
                 "Initial Graph DFS. Start vertex at index 0"
         ));
 
-        // 2. DFS Traversal Logic
         boolean[] visited = new boolean[n];
         int[] currentStep = {stepNum};
 
-        dfs(0, array, visited, steps, currentStep);
+        arrayDfsRecursive(0, array, visited, steps, currentStep);
 
-        // 3. Completion Step
         steps.add(new VisualizationStep(
                 currentStep[0],
                 ActionType.COMPLETE,
@@ -58,7 +165,7 @@ public class DepthFirstSearchGenerator implements VisualizationGenerator {
         );
     }
 
-    private void dfs(int u, List<Integer> array, boolean[] visited, List<VisualizationStep> steps, int[] stepNum) {
+    private void arrayDfsRecursive(int u, List<Integer> array, boolean[] visited, List<VisualizationStep> steps, int[] stepNum) {
         visited[u] = true;
 
         steps.add(new VisualizationStep(
@@ -80,7 +187,7 @@ public class DepthFirstSearchGenerator implements VisualizationGenerator {
                     new ArrayList<>(array),
                     String.format("Exploring edge %d -> %d", u, left)
             ));
-            dfs(left, array, visited, steps, stepNum);
+            arrayDfsRecursive(left, array, visited, steps, stepNum);
         }
 
         if (right < array.size() && !visited[right]) {
@@ -91,7 +198,7 @@ public class DepthFirstSearchGenerator implements VisualizationGenerator {
                     new ArrayList<>(array),
                     String.format("Exploring edge %d -> %d", u, right)
             ));
-            dfs(right, array, visited, steps, stepNum);
+            arrayDfsRecursive(right, array, visited, steps, stepNum);
         }
     }
 }
