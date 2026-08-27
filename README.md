@@ -43,73 +43,51 @@ High-performance, RESTful Spring Boot service powering the **CodeLoom DSA Visual
 - Safe deletion validation preventing category deletion while referenced by algorithms.
 - Algorithm CRUD (`POST`, `PUT`, `DELETE /api/v1/admin/algorithms`).
 
-### 4. Flyway Seed Baseline (8 Categories, 18 Algorithms)
-- **Categories:** Sorting, Searching, Arrays, Linked Lists, Trees, Graphs, Dynamic Programming, Greedy.
-- **Algorithms:** Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, Quick Sort, Linear Search, Binary Search, Two Sum, Kadane's Algorithm, Linked List Traversal, BST, Tree Traversal, BFS, DFS, Dijkstra's, Fibonacci DP, LCS, Activity Selection.
+### 4. Seeded Catalog
+- **Categories:** Sorting, Searching, Data Structures, Trees, Graphs, Dynamic Programming.
+- **Algorithms:** Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, Quick Sort, Linear Search, Binary Search, Two Sum, Kadane's Algorithm, Linked List Traversal, BST, Tree Traversal, BFS, DFS, Dijkstra's Algorithm, Fibonacci DP.
 
 ### 5. Strategy-Based Algorithm Visualization Engine
 - Universal Endpoint: `POST /api/v1/algorithms/{slug}/visualize`
-- **Supported Sorting Generators (Phase 5A):**
-  - **Bubble Sort** (`bubble-sort`)
-  - **Selection Sort** (`selection-sort`)
-  - **Insertion Sort** (`insertion-sort`)
-  - **Merge Sort** (`merge-sort`)
-  - **Quick Sort** (`quick-sort`)
-- Action Types: `INITIAL`, `SELECT`, `COMPARE`, `SWAP`, `UPDATE`, `NO_SWAP`, `COMPLETE`.
-- Defensive Copying: Every step includes an immutable array snapshot.
+- **Supported Sorting Generators:** Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, Quick Sort.
+- **Supported Searching Generators:** Linear Search (requires target), Binary Search (requires ascending sorted input & target).
+- **Supported Graph Generators:** Breadth-First Search, Depth-First Search (supports Graph DTO payload with `nodes`, `edges`, `startNode`).
+- **Action Types:** `INITIAL`, `SELECT`, `COMPARE`, `SWAP`, `UPDATE`, `NO_SWAP`, `VISIT`, `INSERT`, `FOUND`, `NOT_FOUND`, `COMPLETE`.
 
 ---
 
 ## 📡 API Usage Examples
 
-### Request Visualization (`POST /api/v1/algorithms/quick-sort/visualize`)
+### 1. Sorting Request (`POST /api/v1/algorithms/quick-sort/visualize`)
 
-```http
-POST /api/v1/algorithms/quick-sort/visualize
-Content-Type: application/json
-
+```json
 {
   "input": [5, 1, 4, 2, 8]
 }
 ```
 
-### Response Payload
+### 2. Searching Request (`POST /api/v1/algorithms/binary-search/visualize`)
 
 ```json
 {
-  "algorithm": "quick-sort",
-  "visualizationType": "ARRAY",
-  "steps": [
-    {
-      "step": 1,
-      "action": "INITIAL",
-      "indices": [],
-      "array": [5, 1, 4, 2, 8],
-      "message": "Initial array state"
-    },
-    {
-      "step": 2,
-      "action": "SELECT",
-      "indices": [4],
-      "array": [5, 1, 4, 2, 8],
-      "message": "Selected pivot 8 at index 4 for subarray [0..4]"
-    },
-    {
-      "step": 3,
-      "action": "COMPARE",
-      "indices": [0, 4],
-      "array": [5, 1, 4, 2, 8],
-      "message": "Comparing element 5 at index 0 with pivot 8 at index 4"
-    },
-    ...
-    {
-      "step": 18,
-      "action": "COMPLETE",
-      "indices": [],
-      "array": [1, 2, 4, 5, 8],
-      "message": "Quick Sort completed! Array is fully sorted."
-    }
-  ]
+  "input": [1, 3, 5, 7, 9, 11],
+  "target": 7
+}
+```
+
+### 3. Graph Traversal Request (`POST /api/v1/algorithms/breadth-first-search/visualize`)
+
+```json
+{
+  "graph": {
+    "nodes": ["A", "B", "C", "D"],
+    "edges": [
+      { "from": "A", "to": "B" },
+      { "from": "A", "to": "C" },
+      { "from": "B", "to": "D" }
+    ],
+    "startNode": "A"
+  }
 }
 ```
 
@@ -117,7 +95,7 @@ Content-Type: application/json
 
 ## 🧪 Testing & Verification
 
-Run the comprehensive Maven test suite (46 passing tests):
+Run the comprehensive Maven test suite:
 
 ```bash
 ./mvnw clean test
@@ -128,7 +106,7 @@ Expected Output:
 ```text
 [INFO] Results:
 [INFO] 
-[INFO] Tests run: 46, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 45, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
@@ -143,12 +121,8 @@ Expected Output:
 - [x] **Phase 3:** Admin Management & CRUD APIs
 - [x] **Phase 3B:** Seed Baseline DSA Data (Flyway Migrations)
 - [x] **Phase 4:** Visualization Strategy Architecture
-- [x] **Phase 5A:** Sorting Algorithm Generators (Bubble, Selection, Insertion, Merge, Quick)
-- [x] **Phase 5B:** Searching Generators (Linear Search, Binary Search)
-- [x] **Phase 5C:** Array & DP Generators (Two Sum, Kadane's Algorithm, Fibonacci DP)
-- [x] **Phase 5D:** Linked List Generators (Linked List Traversal)
-- [x] **Phase 5E:** Tree & Graph Generators (BST, Tree Traversal, BFS, DFS, Dijkstra's)
-- [ ] **Phase 6:** Advanced Custom Inputs & Constraints
+- [x] **Phase 5:** Core Visualization Strategy Generators (Sorting, DP, Trees, Lists)
+- [x] **Phase 6:** Searching, Graph Visualization Architecture, BFS, DFS & Validation
 - [ ] **Phase 7:** User Progress, Bookmarks & Execution History
 - [ ] **Phase 8:** OpenAPI / Swagger Documentation
 - [ ] **Phase 9:** Frontend Integration
