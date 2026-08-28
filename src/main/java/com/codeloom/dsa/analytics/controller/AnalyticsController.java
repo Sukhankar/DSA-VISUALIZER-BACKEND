@@ -58,4 +58,13 @@ public class AnalyticsController {
         List<LeaderboardUserDto> response = analyticsService.getLeaderboard(limit);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/xp-timeline")
+    public ResponseEntity<List<DailyActivityDto>> getXpTimeline(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        List<DailyActivityDto> response = analyticsService.getXpTimeline(userDetails.getUsername());
+        return ResponseEntity.ok(response);
+    }
 }
+

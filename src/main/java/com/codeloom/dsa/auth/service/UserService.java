@@ -19,15 +19,18 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.codeloom.dsa.profile.service.UserProfileService userProfileService;
 
     public UserService(
             UserRepository userRepository,
             RoleRepository roleRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            com.codeloom.dsa.profile.service.UserProfileService userProfileService
     ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userProfileService = userProfileService;
     }
 
     @Transactional
@@ -61,12 +64,16 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
+        // Auto create default profile
+        userProfileService.getOrCreateProfile(savedUser);
+
         return new RegisterResponse(
                 savedUser.getId(),
                 savedUser.getEmail(),
                 savedUser.getUsername()
         );
     }
+
 
     @Transactional(readOnly = true)
     public CurrentUserResponse getCurrentUser(String email) {

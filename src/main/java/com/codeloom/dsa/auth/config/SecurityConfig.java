@@ -57,12 +57,13 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Swagger UI and OpenAPI docs
+                        // Swagger UI and OpenAPI docs & error dispatcher
                         .requestMatchers(
                                 "/v3/api-docs",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                "/error"
                         ).permitAll()
 
                         // Public authentication endpoints
@@ -76,18 +77,29 @@ public class SecurityConfig {
                                 "/api/v1/categories/**"
                         ).permitAll()
 
-                        // Public algorithm read endpoints
+                        // Public algorithm read & visualization endpoints
                         .requestMatchers(
                                 "/api/v1/algorithms",
-                                "/api/v1/algorithms/**"
+                                "/api/v1/algorithms/**",
+                                "/api/v1/visualizations",
+                                "/api/v1/visualizations/**"
                         ).permitAll()
+
 
                         // Public problem catalog & sample code execution endpoints
                         .requestMatchers(
                                 "/api/v1/problems",
-                                "/api/v1/problems/*",
-                                "/api/v1/problems/*/run"
+                                "/api/v1/problems/**"
                         ).permitAll()
+
+                        // Public roadmap & learning endpoints
+                        .requestMatchers(
+                                "/api/v1/roadmap",
+                                "/api/v1/roadmap/**",
+                                "/api/v1/learning",
+                                "/api/v1/learning/**"
+                        ).permitAll()
+
 
                         // Public leaderboard analytics endpoint
                         .requestMatchers(

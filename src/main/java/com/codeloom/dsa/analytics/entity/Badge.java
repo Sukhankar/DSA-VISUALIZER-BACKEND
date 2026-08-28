@@ -31,19 +31,33 @@ public class Badge {
     @Column(name = "xp_reward", nullable = false)
     private int xpReward = 0;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private BadgeRarity rarity = BadgeRarity.COMMON;
+
+    @Column(name = "unlock_type", length = 50)
+    private String unlockType;
+
+    @Column(name = "unlock_value")
+    private Integer unlockValue;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
     protected Badge() {}
 
-    public Badge(String code, String name, String description, String iconName, String category, int xpReward) {
+    public Badge(String code, String name, String description, String iconName, String category, int xpReward, BadgeRarity rarity, String unlockType, Integer unlockValue) {
         this.code = code;
         this.name = name;
         this.description = description;
         this.iconName = iconName;
         this.category = category;
         this.xpReward = xpReward;
+        this.rarity = rarity != null ? rarity : BadgeRarity.COMMON;
+        this.unlockType = unlockType;
+        this.unlockValue = unlockValue;
     }
+
 
     @PrePersist
     protected void onCreate() {
@@ -78,7 +92,20 @@ public class Badge {
         return xpReward;
     }
 
+    public BadgeRarity getRarity() {
+        return rarity;
+    }
+
+    public String getUnlockType() {
+        return unlockType;
+    }
+
+    public Integer getUnlockValue() {
+        return unlockValue;
+    }
+
     public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
+
 }

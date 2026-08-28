@@ -54,7 +54,7 @@ public class UserProgressService {
         progress.start();
         UserAlgorithmProgress savedProgress = progressRepository.save(progress);
 
-        gamificationService.processActivity(user, "ALGORITHM_VISUALIZATION", 10, "Started algorithm: " + algorithm.getName());
+        gamificationService.processActivity(user, "ALGORITHM_VISUALIZATION", 5, "Started algorithm: " + algorithm.getName());
 
         return mapToProgressResponse(savedProgress);
     }
@@ -86,7 +86,7 @@ public class UserProgressService {
         progress.complete();
         UserAlgorithmProgress savedProgress = progressRepository.save(progress);
 
-        gamificationService.processActivity(user, "ALGORITHM_VISUALIZATION", 50, "Completed algorithm: " + algorithm.getName());
+        gamificationService.processActivity(user, "ALGORITHM_COMPLETED", 15, "Completed algorithm: " + algorithm.getName());
 
         return mapToProgressResponse(savedProgress);
     }

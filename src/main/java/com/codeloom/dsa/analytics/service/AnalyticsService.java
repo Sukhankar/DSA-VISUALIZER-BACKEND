@@ -33,6 +33,7 @@ public class AnalyticsService {
     private final AlgorithmCategoryRepository categoryRepository;
     private final UserAlgorithmProgressRepository progressRepository;
     private final ProblemSubmissionRepository submissionRepository;
+    private final XpLedgerRepository xpLedgerRepository;
 
     public AnalyticsService(
             UserRepository userRepository,
@@ -43,7 +44,8 @@ public class AnalyticsService {
             UserDailyActivityRepository dailyActivityRepository,
             AlgorithmCategoryRepository categoryRepository,
             UserAlgorithmProgressRepository progressRepository,
-            ProblemSubmissionRepository submissionRepository
+            ProblemSubmissionRepository submissionRepository,
+            XpLedgerRepository xpLedgerRepository
     ) {
         this.userRepository = userRepository;
         this.streakRepository = streakRepository;
@@ -54,6 +56,7 @@ public class AnalyticsService {
         this.categoryRepository = categoryRepository;
         this.progressRepository = progressRepository;
         this.submissionRepository = submissionRepository;
+        this.xpLedgerRepository = xpLedgerRepository;
     }
 
     public AnalyticsOverviewResponse getAnalyticsOverview(String email) {
@@ -245,4 +248,25 @@ public class AnalyticsService {
                 progress
         );
     }
+
+    public List<DailyActivityDto> getXpTimeline(String email) {
+        User user = getUserByEmail(email);
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(30);
+
+        List<UserDailyActivity> activities = dailyActivityRepository
+                .findByUserIdAndActivityDateBetweenOrderByActivityDateAsc(user.getId(), startDate, endDate);
+
+        Map<LocalDate, Integer> xpMap = activities.stream()
+                .collect(Collectors.toMap(UserDailyActivity::getActivityDate, UserDailyActivity::getXpEarned, (a, b) -> a + b));
+
+        List<DailyActivityDto> result = new ArrayList<>();
+        for (int i = 30; i >= 0; i--) {
+            LocalDate d = endDate.minusDays(i);
+            int xp = xpMap.getOrDefault(d, 0);
+            result.add(new DailyActivityDto(d, xp > 0 ? 1 : 0, xp));
+        }
+        return result;
+    }
 }
+

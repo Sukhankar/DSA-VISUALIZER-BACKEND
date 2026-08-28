@@ -2,13 +2,14 @@ package com.codeloom.dsa.analytics.service;
 
 import com.codeloom.dsa.analytics.entity.*;
 import com.codeloom.dsa.analytics.repository.*;
+import com.codeloom.dsa.profile.entity.UserProfile;
+import com.codeloom.dsa.profile.repository.UserProfileRepository;
 import com.codeloom.dsa.problem.repository.ProblemSubmissionRepository;
 import com.codeloom.dsa.user.entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -22,6 +23,13 @@ public class GamificationService {
     private final UserBadgeRepository userBadgeRepository;
     private final UserDailyActivityRepository dailyActivityRepository;
     private final ProblemSubmissionRepository problemSubmissionRepository;
+    private final UserProfileRepository userProfileRepository;
+    private final UserActivityRepository userActivityRepository;
+    private final UserXpTransactionRepository xpTransactionRepository;
+    private final StreakService streakService;
+    private final LevelService levelService;
+    private final AchievementEngine achievementEngine;
+    private final BadgeEngine badgeEngine;
 
     public GamificationService(
             UserStreakRepository streakRepository,
@@ -30,7 +38,14 @@ public class GamificationService {
             BadgeRepository badgeRepository,
             UserBadgeRepository userBadgeRepository,
             UserDailyActivityRepository dailyActivityRepository,
-            ProblemSubmissionRepository problemSubmissionRepository
+            ProblemSubmissionRepository problemSubmissionRepository,
+            UserProfileRepository userProfileRepository,
+            UserActivityRepository userActivityRepository,
+            UserXpTransactionRepository xpTransactionRepository,
+            StreakService streakService,
+            LevelService levelService,
+            AchievementEngine achievementEngine,
+            BadgeEngine badgeEngine
     ) {
         this.streakRepository = streakRepository;
         this.xpRepository = xpRepository;
@@ -39,50 +54,81 @@ public class GamificationService {
         this.userBadgeRepository = userBadgeRepository;
         this.dailyActivityRepository = dailyActivityRepository;
         this.problemSubmissionRepository = problemSubmissionRepository;
+        this.userProfileRepository = userProfileRepository;
+        this.userActivityRepository = userActivityRepository;
+        this.xpTransactionRepository = xpTransactionRepository;
+        this.streakService = streakService;
+        this.levelService = levelService;
+        this.achievementEngine = achievementEngine;
+        this.badgeEngine = badgeEngine;
     }
 
     public void processActivity(User user, String activityType, int xpAmount, String description) {
-        updateStreak(user);
-        awardXp(user, xpAmount, activityType, description);
-        recordDailyActivity(user, activityType, xpAmount);
+        processActivityWithRef(user, activityType, null, null, xpAmount, description);
+    }
+
+    public void processActivityWithRef(User user, String rawActivityType, String refType, String refId, int xpAmount, String description) {
+        UserProfile profile = userProfileRepository.findByUserId(user.getId())
+                .orElseGet(() -> userProfileRepository.save(new UserProfile(user)));
+
+        // 1. Update Streak
+        UserStreak streak = streakService.recordDailyActivity(user);
+        profile.setCurrentStreak(streak.getCurrentStreak());
+        if (streak.getLongestStreak() > profile.getLongestStreak()) {
+            profile.setLongestStreak(streak.getLongestStreak());
+        }
+
+        // 2. Increment counters in UserProfile based on event
+        ActivityType actType = parseActivityType(rawActivityType);
+        if (actType == ActivityType.PROBLEM_SOLVED) {
+            profile.incrementProblemsSolved();
+        } else if (actType == ActivityType.ALGORITHM_COMPLETED) {
+            profile.incrementAlgorithmsCompleted();
+        } else if (actType == ActivityType.PRACTICE_SESSION_COMPLETED) {
+            profile.incrementPracticeSessions();
+        }
+
+        // 3. Award XP & Log XP Transaction (Idempotently)
+        if (xpAmount > 0) {
+            String reason = rawActivityType;
+            if (refType != null && refId != null) {
+                if (!xpTransactionRepository.existsByUserIdAndReasonAndReferenceTypeAndReferenceId(user.getId(), reason, refType, refId)) {
+                    UserXpTransaction transaction = new UserXpTransaction(user, xpAmount, reason, refType, refId);
+                    xpTransactionRepository.save(transaction);
+
+                    profile.setTotalXp(profile.getTotalXp() + xpAmount);
+                    awardLegacyXp(user, xpAmount, reason, description);
+                }
+            } else {
+                profile.setTotalXp(profile.getTotalXp() + xpAmount);
+                awardLegacyXp(user, xpAmount, reason, description);
+            }
+        }
+
+        // 4. Update Level
+        int newLevel = levelService.calculateLevel(profile.getTotalXp());
+        if (newLevel > profile.getCurrentLevel()) {
+            profile.setCurrentLevel(newLevel);
+            UserActivity levelActivity = new UserActivity(user, ActivityType.LEVEL_UP, "LEVEL", String.valueOf(newLevel), 0, "Reached Level " + newLevel);
+            userActivityRepository.save(levelActivity);
+        }
+
+        // 5. Log Activity
+        UserActivity activity = new UserActivity(user, actType, refType, refId, xpAmount, description);
+        userActivityRepository.save(activity);
+        recordDailyActivity(user, rawActivityType, xpAmount);
+
+        // 6. Save Profile
+        userProfileRepository.save(profile);
+
+        // 7. Evaluate Achievements & Badges
+        achievementEngine.evaluateAchievements(user, profile);
+        badgeEngine.evaluateBadges(user, profile);
         evaluateBadges(user);
     }
 
     public UserStreak updateStreak(User user) {
-        UserStreak streak = streakRepository.findById(user.getId())
-                .orElseGet(() -> new UserStreak(user));
-
-        LocalDate today = LocalDate.now();
-        LocalDate lastDate = streak.getLastActivityDate();
-
-        if (lastDate == null) {
-            streak.setCurrentStreak(1);
-            streak.setLastActivityDate(today);
-        } else if (lastDate.equals(today)) {
-            // Already logged activity today
-        } else {
-            long daysBetween = ChronoUnit.DAYS.between(lastDate, today);
-            if (daysBetween == 1) {
-                streak.setCurrentStreak(streak.getCurrentStreak() + 1);
-                streak.setLastActivityDate(today);
-            } else if (daysBetween == 2 && streak.getStreakFreezeCount() > 0) {
-                // Streak freeze applied for missed day
-                streak.setStreakFreezeCount(streak.getStreakFreezeCount() - 1);
-                streak.setCurrentStreak(streak.getCurrentStreak() + 1);
-                streak.setLastActivityDate(today);
-            } else {
-                // Reset streak
-                streak.setCurrentStreak(1);
-                streak.setLastActivityDate(today);
-            }
-        }
-
-        // Award streak freeze if milestone reached (every 7 days)
-        if (streak.getCurrentStreak() % 7 == 0 && streak.getStreakFreezeCount() < 2) {
-            streak.setStreakFreezeCount(streak.getStreakFreezeCount() + 1);
-        }
-
-        return streakRepository.save(streak);
+        return streakService.recordDailyActivity(user);
     }
 
     public UserXp awardXp(User user, int amount, String source, String description) {
@@ -90,9 +136,19 @@ public class GamificationService {
             return xpRepository.findById(user.getId()).orElseGet(() -> xpRepository.save(new UserXp(user)));
         }
 
-        UserXp userXp = xpRepository.findById(user.getId())
-                .orElseGet(() -> new UserXp(user));
+        UserProfile profile = userProfileRepository.findByUserId(user.getId())
+                .orElseGet(() -> userProfileRepository.save(new UserProfile(user)));
 
+        profile.setTotalXp(profile.getTotalXp() + amount);
+        int newLevel = levelService.calculateLevel(profile.getTotalXp());
+        profile.setCurrentLevel(newLevel);
+        userProfileRepository.save(profile);
+
+        return awardLegacyXp(user, amount, source, description);
+    }
+
+    private UserXp awardLegacyXp(User user, int amount, String source, String description) {
+        UserXp userXp = xpRepository.findById(user.getId()).orElseGet(() -> new UserXp(user));
         userXp.addXp(amount);
         xpRepository.save(userXp);
 
@@ -122,33 +178,12 @@ public class GamificationService {
         UserXp userXp = xpRepository.findById(user.getId()).orElse(null);
         long solvedCount = problemSubmissionRepository.countAcceptedSubmissionsByUser(user.getId());
 
-        // 1. FIRST_STEP badge
         tryUnlockBadge(user, "FIRST_STEP");
-
-        // 2. CODE_ROOKIE badge
-        if (solvedCount >= 1) {
-            tryUnlockBadge(user, "CODE_ROOKIE");
-        }
-
-        // 3. STREAK_7 badge
-        if (streak != null && streak.getCurrentStreak() >= 7) {
-            tryUnlockBadge(user, "STREAK_7");
-        }
-
-        // 4. STREAK_30 badge
-        if (streak != null && streak.getCurrentStreak() >= 30) {
-            tryUnlockBadge(user, "STREAK_30");
-        }
-
-        // 5. ARRAY_MASTER badge
-        if (solvedCount >= 3) {
-            tryUnlockBadge(user, "ARRAY_MASTER");
-        }
-
-        // 6. CENTURION badge
-        if (userXp != null && userXp.getTotalXp() >= 1000) {
-            tryUnlockBadge(user, "CENTURION");
-        }
+        if (solvedCount >= 1) tryUnlockBadge(user, "CODE_ROOKIE");
+        if (streak != null && streak.getCurrentStreak() >= 7) tryUnlockBadge(user, "STREAK_7");
+        if (streak != null && streak.getCurrentStreak() >= 30) tryUnlockBadge(user, "STREAK_30");
+        if (solvedCount >= 3) tryUnlockBadge(user, "ARRAY_MASTER");
+        if (userXp != null && userXp.getTotalXp() >= 1000) tryUnlockBadge(user, "CENTURION");
     }
 
     private void tryUnlockBadge(User user, String badgeCode) {
@@ -160,6 +195,19 @@ public class GamificationService {
                     awardXp(user, badge.getXpReward(), "BADGE_UNLOCK", "Unlocked badge: " + badge.getName());
                 }
             });
+        }
+    }
+
+    private ActivityType parseActivityType(String type) {
+        if (type == null) return ActivityType.PROBLEM_SOLVED;
+        try {
+            return ActivityType.valueOf(type.toUpperCase());
+        } catch (Exception e) {
+            if (type.startsWith("PROBLEM_SOLVED")) return ActivityType.PROBLEM_SOLVED;
+            if (type.startsWith("ALGORITHM")) return ActivityType.ALGORITHM_COMPLETED;
+            if (type.startsWith("PRACTICE")) return ActivityType.PRACTICE_SESSION_COMPLETED;
+            if (type.startsWith("DAILY")) return ActivityType.DAILY_CHALLENGE_COMPLETED;
+            return ActivityType.PROBLEM_SOLVED;
         }
     }
 }

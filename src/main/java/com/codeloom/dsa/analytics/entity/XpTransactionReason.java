@@ -1,0 +1,13 @@
+package com.codeloom.dsa.analytics.entity;
+
+public enum XpTransactionReason {
+    PROBLEM_SOLVED,
+    ALGORITHM_COMPLETED,
+    VISUALIZATION_COMPLETED,
+    PRACTICE_SESSION,
+    TIMED_SESSION_BONUS,
+    DAILY_CHALLENGE,
+    STREAK_BONUS,
+    ACHIEVEMENT_UNLOCKED,
+    BADGE_UNLOCKED
+}

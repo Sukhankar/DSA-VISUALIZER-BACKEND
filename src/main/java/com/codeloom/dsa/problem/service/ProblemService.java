@@ -44,12 +44,17 @@ public class ProblemService {
             String search,
             Pageable pageable
     ) {
-        Page<Problem> page = problemRepository.findWithFilters(
-                difficulty,
-                (categorySlug != null && !categorySlug.isBlank()) ? categorySlug : null,
-                (search != null && !search.isBlank()) ? search.trim() : null,
-                pageable
-        );
+        Page<Problem> page;
+
+        if (categorySlug != null && !categorySlug.isBlank()) {
+            page = problemRepository.findByCategorySlug(categorySlug.trim(), pageable);
+        } else if (difficulty != null) {
+            page = problemRepository.findByDifficulty(difficulty, pageable);
+        } else if (search != null && !search.isBlank()) {
+            page = problemRepository.findByTitleContainingIgnoreCase(search.trim(), pageable);
+        } else {
+            page = problemRepository.findAll(pageable);
+        }
 
         List<ProblemSummaryResponse> content = page.getContent()
                 .stream()

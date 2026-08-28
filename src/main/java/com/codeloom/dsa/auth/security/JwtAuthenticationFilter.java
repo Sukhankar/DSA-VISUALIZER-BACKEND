@@ -46,44 +46,47 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String jwt = authHeader.substring(7);
+        try {
+            String jwt = authHeader.substring(7);
+            String username = jwtService.extractUsername(jwt);
 
-        String username = jwtService.extractUsername(jwt);
+            if (username != null &&
+                    SecurityContextHolder
+                            .getContext()
+                            .getAuthentication() == null) {
 
-        if (username != null &&
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication() == null) {
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(
+                                username
+                        );
 
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(
-                            username
+                if (jwtService.isTokenValid(
+                        jwt,
+                        userDetails
+                )) {
+
+                    UsernamePasswordAuthenticationToken
+                            authenticationToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
+                    authenticationToken.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request)
                     );
 
-            if (jwtService.isTokenValid(
-                    jwt,
-                    userDetails
-            )) {
-
-                UsernamePasswordAuthenticationToken
-                        authenticationToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
-
-                authenticationToken.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
-                );
-
-                SecurityContextHolder
-                        .getContext()
-                        .setAuthentication(
-                                authenticationToken
-                        );
+                    SecurityContextHolder
+                            .getContext()
+                            .setAuthentication(
+                                    authenticationToken
+                            );
+                }
             }
+        } catch (Exception e) {
+            logger.debug("Failed to set user authentication from JWT: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);

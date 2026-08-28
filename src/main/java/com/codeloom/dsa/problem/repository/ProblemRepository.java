@@ -22,15 +22,9 @@ public interface ProblemRepository extends JpaRepository<Problem, UUID> {
 
     List<Problem> findByDifficulty(Difficulty difficulty);
 
-    @Query("SELECT p FROM Problem p WHERE " +
+    Page<Problem> findByDifficulty(Difficulty difficulty, Pageable pageable);
 
-           "(:difficulty IS NULL OR p.difficulty = :difficulty) AND " +
-           "(:categorySlug IS NULL OR p.category.slug = :categorySlug) AND " +
-           "(:search IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')))")
-    Page<Problem> findWithFilters(
-            @Param("difficulty") Difficulty difficulty,
-            @Param("categorySlug") String categorySlug,
-            @Param("search") String search,
-            Pageable pageable
-    );
+    Page<Problem> findByCategorySlug(String categorySlug, Pageable pageable);
+
+    Page<Problem> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 }

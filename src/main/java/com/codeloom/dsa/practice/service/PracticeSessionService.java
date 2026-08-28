@@ -295,12 +295,15 @@ public class PracticeSessionService {
     }
 
     private int calculateProblemScore(Problem problem) {
+        if (problem.getDifficulty() == null) return 100;
         return switch (problem.getDifficulty()) {
             case EASY -> 100;
             case MEDIUM -> 200;
             case HARD -> 400;
+            case EXTREME_HARD -> 800;
         };
     }
+
 
     public PracticeSessionDto toSessionDto(PracticeSession session, User user) {
         List<PracticeSessionProblemDto> problemDtos = session.getProblems().stream()

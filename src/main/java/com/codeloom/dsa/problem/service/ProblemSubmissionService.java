@@ -117,15 +117,18 @@ public class ProblemSubmissionService {
         // Process gamification rewards for accepted submission
         if (summary.verdict() == SubmissionVerdict.ACCEPTED) {
             int xp = getXpForDifficulty(problem.getDifficulty());
-            gamificationService.processActivity(
+            gamificationService.processActivityWithRef(
                     user,
-                    "PROBLEM_SOLVED_" + problem.getDifficulty().name(),
+                    "PROBLEM_SOLVED",
+                    "PROBLEM",
+                    problem.getId().toString(),
                     xp,
                     "Solved problem: " + problem.getTitle() + " (" + problem.getDifficulty() + ")"
             );
         } else {
             gamificationService.processActivity(user, "SUBMISSION_ATTEMPT", 0, "Attempted problem: " + problem.getTitle());
         }
+
 
         return mapSubmissionResponse(submission);
     }
@@ -182,11 +185,12 @@ public class ProblemSubmissionService {
     }
 
     private int getXpForDifficulty(Difficulty difficulty) {
-        if (difficulty == null) return 100;
+        if (difficulty == null) return 25;
         return switch (difficulty) {
-            case EASY -> 100;
-            case MEDIUM -> 200;
-            case HARD -> 400;
+            case EASY -> 25;
+            case MEDIUM -> 60;
+            case HARD -> 120;
+            case EXTREME_HARD -> 250;
         };
     }
 

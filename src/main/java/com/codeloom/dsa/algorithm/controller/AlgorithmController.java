@@ -69,15 +69,27 @@ public class AlgorithmController {
             @RequestParam(defaultValue = "name,asc") String[] sort
     ) {
 
-        String sortField = sort[0];
+        String sortField = "name";
+        String sortDirection = "asc";
+
+        if (sort != null && sort.length > 0) {
+            if (sort.length == 1 && sort[0].contains(",")) {
+                String[] parts = sort[0].split(",");
+                sortField = parts[0].trim();
+                sortDirection = parts.length > 1 ? parts[1].trim() : "asc";
+            } else if (sort.length >= 2) {
+                sortField = sort[0].trim();
+                sortDirection = sort[1].trim();
+            } else {
+                sortField = sort[0].trim();
+            }
+        }
 
         if (!ALLOWED_SORT_FIELDS.contains(sortField)) {
             throw new IllegalArgumentException("Invalid sort field: " + sortField);
         }
 
-        String sortDirection = sort.length > 1 ? sort[1] : "asc";
         Sort.Direction direction;
-
         if (sortDirection.equalsIgnoreCase("asc")) {
             direction = Sort.Direction.ASC;
         } else if (sortDirection.equalsIgnoreCase("desc")) {
@@ -89,6 +101,7 @@ public class AlgorithmController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
         return algorithmService.getAlgorithms(category, difficulty, search, pageable);
     }
+
 
     @GetMapping("/{slug}")
     @Operation(summary = "Get algorithm details by slug", description = "Retrieves full metadata, description, complexity, and configuration for a specific algorithm.")
