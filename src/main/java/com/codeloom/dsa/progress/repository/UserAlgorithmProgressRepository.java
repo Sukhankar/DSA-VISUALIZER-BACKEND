@@ -3,6 +3,8 @@ package com.codeloom.dsa.progress.repository;
 import com.codeloom.dsa.progress.entity.ProgressStatus;
 import com.codeloom.dsa.progress.entity.UserAlgorithmProgress;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -17,4 +19,7 @@ public interface UserAlgorithmProgressRepository extends JpaRepository<UserAlgor
     List<UserAlgorithmProgress> findTop5ByUserIdOrderByUpdatedAtDesc(UUID userId);
     long countByUserIdAndStatus(UUID userId, ProgressStatus status);
     long countByUserIdAndStatusIn(UUID userId, Collection<ProgressStatus> statuses);
+
+    @Query("SELECT COUNT(p) FROM UserAlgorithmProgress p WHERE p.user.id = :userId AND p.algorithm.category.id = :categoryId AND p.status = com.codeloom.dsa.progress.entity.ProgressStatus.COMPLETED")
+    long countCompletedByUserIdAndCategory(@Param("userId") UUID userId, @Param("categoryId") UUID categoryId);
 }

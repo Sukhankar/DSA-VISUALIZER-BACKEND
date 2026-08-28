@@ -2,6 +2,7 @@ package com.codeloom.dsa.progress.service;
 
 import com.codeloom.dsa.algorithm.entity.Algorithm;
 import com.codeloom.dsa.algorithm.repository.AlgorithmRepository;
+import com.codeloom.dsa.analytics.service.GamificationService;
 import com.codeloom.dsa.common.exception.ResourceNotFoundException;
 import com.codeloom.dsa.progress.dto.LearningDashboardResponse;
 import com.codeloom.dsa.progress.dto.ProgressResponse;
@@ -25,17 +26,20 @@ public class UserProgressService {
     private final AlgorithmRepository algorithmRepository;
     private final UserAlgorithmProgressRepository progressRepository;
     private final UserFavoriteRepository favoriteRepository;
+    private final GamificationService gamificationService;
 
     public UserProgressService(
             UserRepository userRepository,
             AlgorithmRepository algorithmRepository,
             UserAlgorithmProgressRepository progressRepository,
-            UserFavoriteRepository favoriteRepository
+            UserFavoriteRepository favoriteRepository,
+            GamificationService gamificationService
     ) {
         this.userRepository = userRepository;
         this.algorithmRepository = algorithmRepository;
         this.progressRepository = progressRepository;
         this.favoriteRepository = favoriteRepository;
+        this.gamificationService = gamificationService;
     }
 
     @Transactional
@@ -49,6 +53,8 @@ public class UserProgressService {
 
         progress.start();
         UserAlgorithmProgress savedProgress = progressRepository.save(progress);
+
+        gamificationService.processActivity(user, "ALGORITHM_VISUALIZATION", 10, "Started algorithm: " + algorithm.getName());
 
         return mapToProgressResponse(savedProgress);
     }
@@ -79,6 +85,8 @@ public class UserProgressService {
 
         progress.complete();
         UserAlgorithmProgress savedProgress = progressRepository.save(progress);
+
+        gamificationService.processActivity(user, "ALGORITHM_VISUALIZATION", 50, "Completed algorithm: " + algorithm.getName());
 
         return mapToProgressResponse(savedProgress);
     }

@@ -1,0 +1,58 @@
+package com.codeloom.dsa.analytics.entity;
+
+import com.codeloom.dsa.user.entity.User;
+import jakarta.persistence.*;
+
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(
+        name = "user_badges",
+        uniqueConstraints = @UniqueConstraint(name = "unique_user_badge", columnNames = {"user_id", "badge_id"})
+)
+public class UserBadge {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "badge_id", nullable = false)
+    private Badge badge;
+
+    @Column(name = "unlocked_at", nullable = false, updatable = false)
+    private OffsetDateTime unlockedAt;
+
+    protected UserBadge() {}
+
+    public UserBadge(User user, Badge badge) {
+        this.user = user;
+        this.badge = badge;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.unlockedAt = OffsetDateTime.now();
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public Badge getBadge() {
+        return badge;
+    }
+
+    public OffsetDateTime getUnlockedAt() {
+        return unlockedAt;
+    }
+}

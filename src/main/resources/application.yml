@@ -3,23 +3,36 @@ spring:
     name: codeloom-backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/dsa_visualizer
-    username: dsa
-    password: dsa_dev_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/dsa_visualizer}
+    username: ${SPRING_DATASOURCE_USERNAME:dsa}
+    password: ${SPRING_DATASOURCE_PASSWORD:dsa_dev_password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   data:
     redis:
-      host: localhost
-      port: 6380
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
 
 server:
-  port: 8080
+  port: ${PORT:8080}
+
+# Spring Boot Actuator Health & Observability Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always

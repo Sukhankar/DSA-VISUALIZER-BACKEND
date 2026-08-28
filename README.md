@@ -2,20 +2,20 @@
 
 > *"Understand Algorithms. See Every Step. Master the Logic."*
 
-High-performance, RESTful Spring Boot service powering the **CodeLoom DSA Visualizer**. Provides secure user authentication, algorithm catalog management, role-based administration, versioned Flyway migrations, and step-by-step algorithm visualization engine.
+High-performance, RESTful Spring Boot service powering the **CodeLoom DSA Visualizer**. Provides secure user authentication, algorithm catalog management, interactive algorithm visualization engines, problem practice arena, analytics & gamification, daily challenges, and practice session tracking.
 
 ---
 
 ## 🛠️ Technology Stack
 
 - **Language & Runtime:** Java 21 (LTS)
-- **Framework:** Spring Boot 3.4+ / 4.x
+- **Framework:** Spring Boot 3.4+
 - **Security:** Spring Security, JWT (JSON Web Tokens), BCrypt Password Hashing
-- **Database:** PostgreSQL 16
-- **Database Migrations:** Flyway (Versioned & Idempotent)
-- **Cache & Message Broker:** Redis, Apache Kafka (via Docker Compose)
+- **Database:** PostgreSQL 16 / 17
+- **Database Migrations:** Flyway (Versioned & Idempotent Migrations `V1` to `V10`)
+- **Cache & Infrastructure:** Redis, Docker & Docker Compose
 - **Build System:** Apache Maven 3.9+
-- **Testing:** JUnit 5, MockMvc, AssertJ
+- **Testing:** JUnit 5, MockMvc, AssertJ, Spring Security Test
 
 ---
 
@@ -26,76 +26,34 @@ High-performance, RESTful Spring Boot service powering the **CodeLoom DSA Visual
 - User Authentication (`POST /api/v1/auth/login`) issuing JWT tokens.
 - Stateless JWT Authentication Filter intercepting protected requests.
 - Role-Based Access Control (`ROLE_USER`, `ROLE_ADMIN`).
-- Global Exception Handler returning standardized JSON error payloads.
 
-### 2. Algorithm Catalog & Public Domain APIs
-- Public Categories Endpoint (`GET /api/v1/categories`).
-- Public Algorithms Endpoint (`GET /api/v1/algorithms`) supporting:
-  - Full-text search (`?search=sort`)
-  - Category filtering (`?category=sorting`)
-  - Difficulty filtering (`?difficulty=EASY`)
-  - Dynamic pagination & sorting (`?page=0&size=10&sortBy=name`)
-- Single Algorithm lookup by slug (`GET /api/v1/algorithms/{slug}`).
-
-### 3. Admin Management Subsystem
-- Secured via `@PreAuthorize("hasRole('ADMIN')")`.
-- Category CRUD (`POST`, `PUT`, `DELETE /api/v1/admin/categories`).
-- Safe deletion validation preventing category deletion while referenced by algorithms.
-- Algorithm CRUD (`POST`, `PUT`, `DELETE /api/v1/admin/algorithms`).
-
-### 4. Seeded Catalog
-- **Categories:** Sorting, Searching, Data Structures, Trees, Graphs, Dynamic Programming.
-- **Algorithms:** Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, Quick Sort, Linear Search, Binary Search, Two Sum, Kadane's Algorithm, Linked List Traversal, BST, Tree Traversal, BFS, DFS, Dijkstra's Algorithm, Fibonacci DP.
-
-### 5. Strategy-Based Algorithm Visualization Engine
+### 2. Strategy-Based Algorithm Visualization Engine
 - Universal Endpoint: `POST /api/v1/algorithms/{slug}/visualize`
 - **Supported Sorting Generators:** Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, Quick Sort.
-- **Supported Searching Generators:** Linear Search (requires target), Binary Search (requires ascending sorted input & target).
-- **Supported Graph Generators:** Breadth-First Search, Depth-First Search (supports Graph DTO payload with `nodes`, `edges`, `startNode`).
-- **Action Types:** `INITIAL`, `SELECT`, `COMPARE`, `SWAP`, `UPDATE`, `NO_SWAP`, `VISIT`, `INSERT`, `FOUND`, `NOT_FOUND`, `COMPLETE`.
+- **Supported Searching Generators:** Linear Search, Binary Search.
+- **Supported Graph Generators:** Breadth-First Search (BFS), Depth-First Search (DFS), Dijkstra.
 
----
+### 3. Practice Arena & Daily Challenges (Phase 15)
+- **Practice Modes:** Daily Challenge, Quick Practice, Topic Focus, Random Shuffle, Timed Sprint, Streak Builder.
+- **Practice Arena Hub Endpoint:** `GET /api/v1/practice/arena` (returns active session, daily challenge, streak, XP & session history).
+- **Session Lifecycle APIs:**
+  - Create Session: `POST /api/v1/practice/sessions`
+  - Fetch Session: `GET /api/v1/practice/sessions/{id}`
+  - Submit Problem in Session: `POST /api/v1/practice/sessions/{id}/submit`
+  - Abandon Session: `POST /api/v1/practice/sessions/{id}/abandon`
+  - Session History: `GET /api/v1/practice/history`
 
-## 📡 API Usage Examples
-
-### 1. Sorting Request (`POST /api/v1/algorithms/quick-sort/visualize`)
-
-```json
-{
-  "input": [5, 1, 4, 2, 8]
-}
-```
-
-### 2. Searching Request (`POST /api/v1/algorithms/binary-search/visualize`)
-
-```json
-{
-  "input": [1, 3, 5, 7, 9, 11],
-  "target": 7
-}
-```
-
-### 3. Graph Traversal Request (`POST /api/v1/algorithms/breadth-first-search/visualize`)
-
-```json
-{
-  "graph": {
-    "nodes": ["A", "B", "C", "D"],
-    "edges": [
-      { "from": "A", "to": "B" },
-      { "from": "A", "to": "C" },
-      { "from": "B", "to": "D" }
-    ],
-    "startNode": "A"
-  }
-}
-```
+### 4. Analytics, XP, Streaks & Gamification
+- Daily activity tracking & GitHub-style heatmap stats.
+- Streak & longest streak calculation.
+- XP Ledger, level progression, and badge definitions.
+- Dynamic leaderboard foundation (`GET /api/v1/analytics/leaderboard`).
 
 ---
 
 ## 🧪 Testing & Verification
 
-Run the comprehensive Maven test suite:
+Run the full Maven backend test suite:
 
 ```bash
 ./mvnw clean test
@@ -106,7 +64,7 @@ Expected Output:
 ```text
 [INFO] Results:
 [INFO] 
-[INFO] Tests run: 45, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 74, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
@@ -114,16 +72,19 @@ Expected Output:
 
 ---
 
-## 🗺️ Project Roadmap
+## 🗺️ Project Roadmap Status
 
-- [x] **Phase 1:** Backend Foundation, Auth & Security
+- [x] **Phase 1:** Backend Foundation, Auth & JWT Security
 - [x] **Phase 2:** Public Category & Algorithm Domain
-- [x] **Phase 3:** Admin Management & CRUD APIs
-- [x] **Phase 3B:** Seed Baseline DSA Data (Flyway Migrations)
-- [x] **Phase 4:** Visualization Strategy Architecture
-- [x] **Phase 5:** Core Visualization Strategy Generators (Sorting, DP, Trees, Lists)
-- [x] **Phase 6:** Searching, Graph Visualization Architecture, BFS, DFS & Validation
-- [ ] **Phase 7:** User Progress, Bookmarks & Execution History
-- [ ] **Phase 8:** OpenAPI / Swagger Documentation
-- [ ] **Phase 9:** Frontend Integration
-- [ ] **Phase 10:** Docker Production & CI/CD
+- [x] **Phase 3:** Admin Management & Seed Data
+- [x] **Phase 4:** Generic Visualization Architecture
+- [x] **Phase 5:** Sorting Algorithm Generators
+- [x] **Phase 6:** Searching & Graph Visualization
+- [x] **Phase 7:** User Progress & Favorites
+- [x] **Phase 8:** OpenAPI & Swagger Documentation
+- [x] **Phase 9:** Frontend Application & Visualization Player
+- [x] **Phase 10:** Production Readiness & Deployment
+- [x] **Phase 11:** Rich Algorithm Learning Content
+- [x] **Phase 12:** LeetCode-Style Problem Practice Engine
+- [x] **Phase 14:** Learning Analytics, Streaks, XP & Badges
+- [x] **Phase 15:** Practice Arena Infrastructure & Session Runner

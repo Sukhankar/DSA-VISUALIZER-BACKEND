@@ -1,5 +1,6 @@
 package com.codeloom.dsa.algorithm.controller;
 
+import com.codeloom.dsa.algorithm.dto.AlgorithmDetailRichResponse;
 import com.codeloom.dsa.algorithm.dto.AlgorithmPageResponse;
 import com.codeloom.dsa.algorithm.dto.AlgorithmResponse;
 import com.codeloom.dsa.algorithm.entity.Difficulty;
@@ -35,9 +36,7 @@ public class AlgorithmController {
 
     private final AlgorithmService algorithmService;
 
-    public AlgorithmController(
-            AlgorithmService algorithmService
-    ) {
+    public AlgorithmController(AlgorithmService algorithmService) {
         this.algorithmService = algorithmService;
     }
 
@@ -48,46 +47,35 @@ public class AlgorithmController {
             @ApiResponse(responseCode = "400", description = "Invalid page, size, or sort field")
     })
     public AlgorithmPageResponse getAlgorithms(
-
             @Parameter(description = "Filter by category slug (e.g. 'sorting', 'searching')")
-            @RequestParam(required = false)
-            String category,
+            @RequestParam(required = false) String category,
 
             @Parameter(description = "Filter by difficulty level")
-            @RequestParam(required = false)
-            Difficulty difficulty,
+            @RequestParam(required = false) Difficulty difficulty,
 
             @Parameter(description = "Keyword search for algorithm name or description")
-            @RequestParam(required = false)
-            String search,
+            @RequestParam(required = false) String search,
 
             @Parameter(description = "Zero-based page index (page >= 0)")
             @RequestParam(defaultValue = "0")
-            @Min(value = 0, message = "Page must be 0 or greater")
-            int page,
+            @Min(value = 0, message = "Page must be 0 or greater") int page,
 
             @Parameter(description = "Page size (1 <= size <= 100)")
             @RequestParam(defaultValue = "10")
             @Min(value = 1, message = "Size must be at least 1")
-            @Max(value = 100, message = "Size must not exceed 100")
-            int size,
+            @Max(value = 100, message = "Size must not exceed 100") int size,
 
             @Parameter(description = "Sort property and direction (e.g. 'name,asc', 'difficulty,desc'). Allowed fields: name, difficulty, timeComplexity, spaceComplexity")
-            @RequestParam(defaultValue = "name,asc")
-            String[] sort
+            @RequestParam(defaultValue = "name,asc") String[] sort
     ) {
 
         String sortField = sort[0];
 
         if (!ALLOWED_SORT_FIELDS.contains(sortField)) {
-            throw new IllegalArgumentException(
-                    "Invalid sort field: " + sortField
-            );
+            throw new IllegalArgumentException("Invalid sort field: " + sortField);
         }
 
-        String sortDirection =
-                sort.length > 1 ? sort[1] : "asc";
-
+        String sortDirection = sort.length > 1 ? sort[1] : "asc";
         Sort.Direction direction;
 
         if (sortDirection.equalsIgnoreCase("asc")) {
@@ -95,23 +83,11 @@ public class AlgorithmController {
         } else if (sortDirection.equalsIgnoreCase("desc")) {
             direction = Sort.Direction.DESC;
         } else {
-            throw new IllegalArgumentException(
-                    "Sort direction must be asc or desc"
-            );
+            throw new IllegalArgumentException("Sort direction must be asc or desc");
         }
 
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by(direction, sortField)
-        );
-
-        return algorithmService.getAlgorithms(
-                category,
-                difficulty,
-                search,
-                pageable
-        );
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+        return algorithmService.getAlgorithms(category, difficulty, search, pageable);
     }
 
     @GetMapping("/{slug}")
@@ -125,5 +101,18 @@ public class AlgorithmController {
             @PathVariable String slug
     ) {
         return algorithmService.getAlgorithmBySlug(slug);
+    }
+
+    @GetMapping("/{slug}/details")
+    @Operation(summary = "Get rich algorithm learning details", description = "Retrieves detailed LeetCode-style algorithm specification including input/output examples, multi-language code implementations (Java, Python, JS, C++), overview, advantages, limitations, and related algorithms.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Rich algorithm learning details retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Algorithm not found with given slug")
+    })
+    public AlgorithmDetailRichResponse getRichAlgorithmDetails(
+            @Parameter(description = "Algorithm slug (e.g. 'bubble-sort', 'binary-search')")
+            @PathVariable String slug
+    ) {
+        return algorithmService.getRichAlgorithmDetails(slug);
     }
 }

@@ -33,6 +33,21 @@ public class Algorithm {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(columnDefinition = "TEXT")
+    private String overview;
+
+    @Column(name = "when_to_use", columnDefinition = "TEXT")
+    private String whenToUse;
+
+    @Column(columnDefinition = "TEXT")
+    private String advantages;
+
+    @Column(columnDefinition = "TEXT")
+    private String limitations;
+
+    @Column(columnDefinition = "TEXT")
+    private String constraints;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Difficulty difficulty;
@@ -96,6 +111,26 @@ public class Algorithm {
         return description;
     }
 
+    public String getOverview() {
+        return overview;
+    }
+
+    public String getWhenToUse() {
+        return whenToUse;
+    }
+
+    public String getAdvantages() {
+        return advantages;
+    }
+
+    public String getLimitations() {
+        return limitations;
+    }
+
+    public String getConstraints() {
+        return constraints;
+    }
+
     public Difficulty getDifficulty() {
         return difficulty;
     }
@@ -128,5 +163,19 @@ public class Algorithm {
         this.difficulty = difficulty;
         this.timeComplexity = timeComplexity;
         this.spaceComplexity = spaceComplexity;
+    }
+
+    public void setRichDetails(
+            String overview,
+            String whenToUse,
+            String advantages,
+            String limitations,
+            String constraints
+    ) {
+        this.overview = overview;
+        this.whenToUse = whenToUse;
+        this.advantages = advantages;
+        this.limitations = limitations;
+        this.constraints = constraints;
     }
 }
