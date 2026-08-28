@@ -1,7 +1,7 @@
 package com.codeloom.dsa.practice.service;
 
 import com.codeloom.dsa.analytics.service.GamificationService;
-import com.codeloom.dsa.common.exception.ResourceNotFoundException;
+
 import com.codeloom.dsa.practice.dto.DailyChallengeDto;
 import com.codeloom.dsa.practice.entity.DailyChallenge;
 import com.codeloom.dsa.practice.entity.UserDailyChallenge;

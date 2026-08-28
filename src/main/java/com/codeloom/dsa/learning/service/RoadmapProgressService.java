@@ -54,8 +54,8 @@ public class RoadmapProgressService {
 
         List<RoadmapModuleDto> moduleDtos = new ArrayList<>();
         int totalModules = modules.size();
-        int completedCount = 0;
         int sumProgress = 0;
+
 
         RoadmapModuleDto currentModuleDto = null;
 
@@ -64,10 +64,10 @@ public class RoadmapProgressService {
             RoadmapStatus status = determineModuleStatus(module, progressMap);
             int completionPercentage = userProgress != null ? userProgress.getCompletionPercentage() : 0;
 
-            if (status == RoadmapStatus.COMPLETED) {
-                completionPercentage = 100;
-                completedCount++;
-            }
+        if (status == RoadmapStatus.COMPLETED) {
+            completionPercentage = 100;
+        }
+
             sumProgress += completionPercentage;
 
             RoadmapModuleDto dto = mapToModuleDto(module, status, completionPercentage);
