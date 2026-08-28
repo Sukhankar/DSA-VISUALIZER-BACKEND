@@ -84,14 +84,17 @@ public class RoadmapProgressService {
         }
 
         UserRoadmapDto response = new UserRoadmapDto();
-        Map<String, String> pathInfo = new HashMap<>();
-        pathInfo.put("slug", "dsa-beginner");
-        pathInfo.put("name", "DSA Beginner Path");
+        com.codeloom.dsa.learning.dto.LearningPathResponse pathInfo = new com.codeloom.dsa.learning.dto.LearningPathResponse();
+        pathInfo.setSlug("dsa-beginner");
+        pathInfo.setName("DSA Beginner Path");
+        pathInfo.setDescription("Structured learning path from Arrays to DP");
+
 
         response.setPath(pathInfo);
         response.setOverallProgress(overallProgress);
         response.setCurrentModule(currentModuleDto);
         response.setModules(moduleDtos);
+
 
         return response;
     }
@@ -150,14 +153,20 @@ public class RoadmapProgressService {
         RoadmapModule recModule = moduleRepository.findBySlug(recommendedSlug).orElse(null);
         String recTitle = recModule != null ? recModule.getTitle() : "Arrays & Complexity";
 
+        com.codeloom.dsa.roadmap.entity.RoadmapTier tier = com.codeloom.dsa.roadmap.entity.RoadmapTier.BEGINNER;
+        try {
+            tier = com.codeloom.dsa.roadmap.entity.RoadmapTier.valueOf(request.getExperienceLevel().name());
+        } catch (Exception ignored) {}
+
         return new AssessmentResultDto(
                 pref.getId().toString(),
-                request.getExperienceLevel().name(),
+                tier,
                 recommendedSlug,
                 recTitle,
                 summary,
                 50
         );
+
     }
 
     @Transactional(readOnly = true)
@@ -244,7 +253,8 @@ public class RoadmapProgressService {
         dto.setTitle(module.getTitle());
         dto.setDescription(module.getDescription());
         dto.setOrderIndex(module.getOrderIndex());
-        dto.setTier(module.getTier() != null ? module.getTier().name() : "BEGINNER");
+        dto.setTier(module.getTier() != null ? module.getTier() : com.codeloom.dsa.roadmap.entity.RoadmapTier.BEGINNER);
+
         dto.setIconName(module.getIconName());
         dto.setCategorySlug(module.getCategorySlug());
         dto.setXpReward(module.getXpReward());

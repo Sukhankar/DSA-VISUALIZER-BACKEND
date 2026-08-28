@@ -29,12 +29,11 @@ class LearningRecommendationIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        testUser = new User();
-        testUser.setUsername("testuser_rec_" + UUID.randomUUID().toString().substring(0, 8));
-        testUser.setEmail("rec_" + UUID.randomUUID().toString().substring(0, 8) + "@example.com");
-        testUser.setPassword("password123");
+        String uid = UUID.randomUUID().toString().substring(0, 8);
+        testUser = new User("rec_" + uid + "@example.com", "testuser_rec_" + uid, "password123");
         testUser = userRepository.save(testUser);
     }
+
 
     @Test
     @DisplayName("Should generate smart next recommendation for user")

@@ -33,12 +33,11 @@ class RoadmapProgressIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        testUser = new User();
-        testUser.setUsername("testuser_roadmap_" + UUID.randomUUID().toString().substring(0, 8));
-        testUser.setEmail("roadmap_" + UUID.randomUUID().toString().substring(0, 8) + "@example.com");
-        testUser.setPassword("password123");
+        String uid = UUID.randomUUID().toString().substring(0, 8);
+        testUser = new User("roadmap_" + uid + "@example.com", "testuser_roadmap_" + uid, "password123");
         testUser = userRepository.save(testUser);
     }
+
 
     @Test
     @DisplayName("Should process onboarding assessment and unlock initial module")
