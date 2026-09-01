@@ -76,9 +76,10 @@ UPDATE roadmap_modules SET learning_path_id = '20000000-0000-0000-0000-000000000
 INSERT INTO roadmap_modules (id, slug, title, description, order_index, tier, icon_name, category_slug, xp_reward, learning_path_id)
 VALUES
 ('10000000-0000-0000-0000-000000000000', 'programming-fundamentals', 'Programming Fundamentals', 'Basic control flow, variables, functions, and memory layout concepts.', 0, 'BEGINNER', 'code', 'arrays', 100, '20000000-0000-0000-0000-000000000001'),
-('10000000-0000-0000-0000-000000000007b', 'recursion', 'Recursion & Backtracking', 'Base cases, recursive call stacks, call stack depth, and state space trees.', 6.5, 'INTERMEDIATE', 'repeat', 'searching', 200, '20000000-0000-0000-0000-000000000001'),
-('10000000-0000-0000-0000-000000000006b', 'heaps', 'Heaps & Priority Queues', 'Min-heaps, max-heaps, heapify operations, and priority queue applications.', 6.8, 'INTERMEDIATE', 'server', 'trees', 250, '20000000-0000-0000-0000-000000000001'),
+('10000000-0000-0000-0000-00000000007b', 'recursion', 'Recursion & Backtracking', 'Base cases, recursive call stacks, call stack depth, and state space trees.', 6.5, 'INTERMEDIATE', 'repeat', 'searching', 200, '20000000-0000-0000-0000-000000000001'),
+('10000000-0000-0000-0000-00000000006b', 'heaps', 'Heaps & Priority Queues', 'Min-heaps, max-heaps, heapify operations, and priority queue applications.', 6.8, 'INTERMEDIATE', 'server', 'trees', 250, '20000000-0000-0000-0000-000000000001'),
 ('10000000-0000-0000-0000-000000000009', 'advanced-problem-solving', 'Advanced Problem Solving', 'Segment trees, trie structures, bit manipulation, and competitive DSA.', 9, 'ADVANCED', 'award', 'dynamic-programming', 400, '20000000-0000-0000-0000-000000000001')
+
 ON CONFLICT (slug) DO NOTHING;
 
 -- Populate roadmap_module_algorithms links with existing algorithms
@@ -92,5 +93,6 @@ ON CONFLICT DO NOTHING;
 INSERT INTO roadmap_module_problems (module_id, problem_id, display_order)
 SELECT m.id, p.id, ROW_NUMBER() OVER (PARTITION BY m.id ORDER BY p.title)
 FROM roadmap_modules m
-JOIN problems p ON p.category_slug = m.category_slug
+JOIN problems p ON p.category_id = (SELECT id FROM algorithm_categories WHERE slug = m.category_slug LIMIT 1)
 ON CONFLICT DO NOTHING;
+
