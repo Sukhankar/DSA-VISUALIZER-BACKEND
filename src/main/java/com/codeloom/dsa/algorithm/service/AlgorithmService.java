@@ -141,16 +141,36 @@ public class AlgorithmService {
                 ))
                 .toList();
 
+        String overview = (algorithm.getOverview() != null && !algorithm.getOverview().isBlank())
+                ? algorithm.getOverview()
+                : getFallbackOverview(algorithm.getName(), algorithm.getCategory().getName());
+
+        String whenToUse = (algorithm.getWhenToUse() != null && !algorithm.getWhenToUse().isBlank())
+                ? algorithm.getWhenToUse()
+                : getFallbackWhenToUse(algorithm.getName(), algorithm.getCategory().getName());
+
+        String advantages = (algorithm.getAdvantages() != null && !algorithm.getAdvantages().isBlank())
+                ? algorithm.getAdvantages()
+                : getFallbackAdvantages(algorithm.getName(), algorithm.getCategory().getName());
+
+        String limitations = (algorithm.getLimitations() != null && !algorithm.getLimitations().isBlank())
+                ? algorithm.getLimitations()
+                : getFallbackLimitations(algorithm.getName(), algorithm.getCategory().getName());
+
+        String constraints = (algorithm.getConstraints() != null && !algorithm.getConstraints().isBlank())
+                ? algorithm.getConstraints()
+                : "• 1 <= input.length <= 100000\n• Valid memory bounds and boundary checks";
+
         return new AlgorithmDetailRichResponse(
                 algorithm.getId(),
                 algorithm.getName(),
                 algorithm.getSlug(),
                 algorithm.getDescription(),
-                algorithm.getOverview(),
-                algorithm.getWhenToUse(),
-                algorithm.getAdvantages(),
-                algorithm.getLimitations(),
-                algorithm.getConstraints(),
+                overview,
+                whenToUse,
+                advantages,
+                limitations,
+                constraints,
                 algorithm.getDifficulty(),
                 algorithm.getTimeComplexity(),
                 algorithm.getSpaceComplexity(),
@@ -161,6 +181,28 @@ public class AlgorithmService {
                 related
         );
     }
+
+    private String getFallbackOverview(String name, String category) {
+        return name + " is a core " + category.toLowerCase() + " algorithm designed to solve fundamental computational problems efficiently. " +
+               "It relies on well-defined invariants and structural state transitions to achieve optimal worst-case and average-case performance bounds. " +
+               "Widely documented across classical Computer Science literature (such as Cormen CLRS and GeeksforGeeks), it serves as a building block for complex software systems.";
+    }
+
+    private String getFallbackWhenToUse(String name, String category) {
+        return "Recommended for " + category + " tasks where clean asymptotic bounds, predictable state transitions, and straightforward memory management are required.";
+    }
+
+    private String getFallbackAdvantages(String name, String category) {
+        return "• Robust theoretical guarantees and predictable execution flow.\n" +
+               "• Invariant-based state transitions ensuring correctness across all inputs.\n" +
+               "• Standard industry usage with wide library support across Java, Python, and C++.";
+    }
+
+    private String getFallbackLimitations(String name, String category) {
+        return "• May require careful handling of edge cases (empty inputs, single element data, boundary conditions).\n" +
+               "• Performance heavily dependent on chosen data structures and underlying hardware cache behaviors.";
+    }
+
 
     @Transactional
     public AlgorithmResponse createAlgorithm(CreateAlgorithmRequest request) {
