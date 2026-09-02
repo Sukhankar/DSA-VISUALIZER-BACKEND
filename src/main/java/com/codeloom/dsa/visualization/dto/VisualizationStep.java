@@ -99,6 +99,23 @@ public record VisualizationStep(
         this(step, action, (List<Object>) indices, (List<Object>) array, null, null, null, null, message, codeLineMap, beginnerExplanation, advancedExplanation, whyMessage, complexityImpact, null, null);
     }
 
+    // 3b. Array constructor with explanations and customState (11 args)
+    public VisualizationStep(
+            int step,
+            ActionType action,
+            List<?> indices,
+            List<?> array,
+            String message,
+            Map<String, Integer> codeLineMap,
+            String beginnerExplanation,
+            String advancedExplanation,
+            String whyMessage,
+            String complexityImpact,
+            Map<String, Object> customState
+    ) {
+        this(step, action, (List<Object>) indices, (List<Object>) array, null, null, null, null, message, codeLineMap, beginnerExplanation, advancedExplanation, whyMessage, complexityImpact, customState, customState);
+    }
+
     // 4. Legacy graph constructor with explanations (13 args)
     public VisualizationStep(
             int step,

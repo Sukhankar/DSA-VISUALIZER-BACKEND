@@ -7,8 +7,7 @@ import com.codeloom.dsa.visualization.entity.ActionType;
 import com.codeloom.dsa.visualization.entity.VisualizationType;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class LinearSearchGenerator implements VisualizationGenerator {
@@ -22,48 +21,66 @@ public class LinearSearchGenerator implements VisualizationGenerator {
 
     @Override
     public VisualizationResponse generate(String algorithmSlug, VisualizationRequest request) {
-        if (request.target() == null) {
-            throw new IllegalArgumentException("Linear Search requires a target value to be specified");
+        if (request != null && request.input() != null && request.target() == null) {
+            throw new IllegalArgumentException("Target value is required for linear search.");
         }
 
-        List<Integer> array = new ArrayList<>(request.input());
+        List<Integer> array = (request != null && request.input() != null && !request.input().isEmpty())
+                ? new ArrayList<>(request.input())
+                : List.of(5, 2, 8, 1, 9);
+        int target = (request != null && request.target() != null) ? request.target() : 8;
+
         List<VisualizationStep> steps = new ArrayList<>();
         int stepNum = 1;
-        int target = request.target();
 
-        // 1. Initial State
+        // 1. Initial Step
         steps.add(new VisualizationStep(
                 stepNum++,
                 ActionType.INITIAL,
-                List.of(),
+                List.of(0),
                 new ArrayList<>(array),
-                "Starting Linear Search for target " + target
+                String.format("Linear Search starting for target = %d across array of size %d.", target, array.size()),
+                Map.of("java", 1, "python", 1, "cpp", 1),
+                String.format("Will inspect elements sequentially starting from index 0 for value %d.", target),
+                "Linear search evaluates elements one by one without assuming order.",
+                "Starting at index 0.",
+                "Time: O(N) worst case | Space: O(1)",
+                Map.of("target", target, "currentIndex", 0)
         ));
 
-        // 2. Linear Search Loop
         boolean found = false;
-        int foundIndex = -1;
-
         for (int i = 0; i < array.size(); i++) {
             int val = array.get(i);
 
+            // 2. Inspection / Compare Step
             steps.add(new VisualizationStep(
                     stepNum++,
                     ActionType.COMPARE,
                     List.of(i),
                     new ArrayList<>(array),
-                    String.format("Comparing target %d with value %d at index %d", target, val, i)
+                    String.format("Inspecting index %d (val = %d). Comparing with target %d.", i, val, target),
+                    Map.of("java", 3, "python", 3, "cpp", 3),
+                    String.format("Checking element at index %d: is %d equal to target %d?", i, val, target),
+                    "Evaluates current element equality against target.",
+                    String.format("Inspecting index %d.", i),
+                    "Comparison takes O(1) time.",
+                    Map.of("currentIndex", i, "currentVal", val, "target", target)
             ));
 
             if (val == target) {
                 found = true;
-                foundIndex = i;
                 steps.add(new VisualizationStep(
                         stepNum++,
                         ActionType.FOUND,
                         List.of(i),
                         new ArrayList<>(array),
-                        String.format("Target %d found at index %d", target, i)
+                        String.format("Target %d found at index %d!", target, i),
+                        Map.of("java", 4, "python", 4, "cpp", 4),
+                        String.format("Value at index %d equals target %d.", i, target),
+                        "Sequential match confirmed.",
+                        String.format("Match located at index %d.", i),
+                        "Search completes early on match.",
+                        Map.of("foundIndex", i, "found", true)
                 ));
                 break;
             }
@@ -75,23 +92,30 @@ public class LinearSearchGenerator implements VisualizationGenerator {
                     ActionType.NOT_FOUND,
                     List.of(),
                     new ArrayList<>(array),
-                    String.format("Target %d not found in the array", target)
+                    String.format("Reached end of array. Target %d not found.", target),
+                    Map.of("java", 5, "python", 5, "cpp", 5),
+                    "Inspected all elements without finding a match.",
+                    "Target is absent from array.",
+                    "Search terminated.",
+                    "N comparisons performed.",
+                    Map.of("found", false)
             ));
         }
 
-        // 3. Completion Step
         steps.add(new VisualizationStep(
                 stepNum,
                 ActionType.COMPLETE,
-                foundIndex != -1 ? List.of(foundIndex) : List.of(),
+                List.of(),
                 new ArrayList<>(array),
-                found ? "Linear Search completed" : "Linear Search completed: target not found"
+                "Linear Search completed processing.",
+                Map.of("java", 6, "python", 6, "cpp", 6),
+                "Execution complete.",
+                "Optimal O(N) sequential search finished.",
+                "Process complete.",
+                "Final Complexity: O(N) Time, O(1) Space",
+                Map.of("found", found)
         ));
 
-        return new VisualizationResponse(
-                SLUG,
-                VisualizationType.ARRAY,
-                steps
-        );
+        return new VisualizationResponse(SLUG, VisualizationType.ARRAY, steps);
     }
 }
