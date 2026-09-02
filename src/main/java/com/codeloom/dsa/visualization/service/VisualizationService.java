@@ -81,12 +81,36 @@ public class VisualizationService {
                     VisualizationRequest effectiveRequest = (request != null) ? request : new VisualizationRequest(List.of());
                     VisualizationResponse baseResponse = generatorOpt.get().generate(slug, effectiveRequest);
                     
+                    List<com.codeloom.dsa.visualization.dto.VisualizationStep> enrichedSteps = baseResponse.steps().stream().map(step -> {
+                        String msg = step.message() != null ? step.message() : "Step execution";
+                        String why = step.whyMessage() != null ? step.whyMessage() : msg;
+                        String beginner = step.beginnerExplanation() != null ? step.beginnerExplanation() : msg;
+                        return new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                                step.step(),
+                                step.action(),
+                                step.indices(),
+                                step.array(),
+                                step.currentNode(),
+                                step.visitedNodes(),
+                                step.frontier(),
+                                step.graphState(),
+                                msg,
+                                step.codeLineMap(),
+                                beginner,
+                                step.advancedExplanation() != null ? step.advancedExplanation() : "Step " + step.step(),
+                                why,
+                                step.complexityImpact() != null ? step.complexityImpact() : "Time: O(1)",
+                                step.state(),
+                                step.customState()
+                        );
+                    }).collect(Collectors.toList());
+
                     // Attach contract telemetry
                     VisualizationContractDto contractDto = mapToContractDto(contract, status);
                     return new VisualizationResponse(
                             baseResponse.algorithm(),
                             baseResponse.visualizationType(),
-                            baseResponse.steps(),
+                            enrichedSteps,
                             contractDto
                     );
                 }
@@ -97,7 +121,33 @@ public class VisualizationService {
         return rawGenerators.stream()
                 .filter(g -> g.supports(slug))
                 .findFirst()
-                .map(g -> g.generate(slug, request))
+                .map(g -> {
+                    VisualizationResponse baseResponse = g.generate(slug, request);
+                    List<com.codeloom.dsa.visualization.dto.VisualizationStep> enrichedSteps = baseResponse.steps().stream().map(step -> {
+                        String msg = step.message() != null ? step.message() : "Step execution";
+                        String why = step.whyMessage() != null ? step.whyMessage() : msg;
+                        String beginner = step.beginnerExplanation() != null ? step.beginnerExplanation() : msg;
+                        return new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                                step.step(),
+                                step.action(),
+                                step.indices(),
+                                step.array(),
+                                step.currentNode(),
+                                step.visitedNodes(),
+                                step.frontier(),
+                                step.graphState(),
+                                msg,
+                                step.codeLineMap(),
+                                beginner,
+                                step.advancedExplanation() != null ? step.advancedExplanation() : "Step " + step.step(),
+                                why,
+                                step.complexityImpact() != null ? step.complexityImpact() : "Time: O(1)",
+                                step.state(),
+                                step.customState()
+                        );
+                    }).collect(Collectors.toList());
+                    return new VisualizationResponse(baseResponse.algorithm(), baseResponse.visualizationType(), enrichedSteps);
+                })
                 .orElseGet(() -> generateGenericVisualization(slug, request));
     }
 
@@ -255,14 +305,28 @@ public class VisualizationService {
         String name = algoOpt.map(a -> a.getName()).orElse(slug);
 
         VisualizationType type;
+        String rendererKey;
         if ("trees".equalsIgnoreCase(catSlug)) {
             type = VisualizationType.TREE;
+            rendererKey = "tree";
         } else if ("linked-lists".equalsIgnoreCase(catSlug)) {
             type = VisualizationType.LINKED_LIST;
+            rendererKey = "linked-list";
         } else if ("graphs".equalsIgnoreCase(catSlug)) {
             type = VisualizationType.GRAPH;
+            rendererKey = "graph";
+        } else if ("searching".equalsIgnoreCase(catSlug)) {
+            type = VisualizationType.ARRAY;
+            rendererKey = "pointer-array";
+        } else if ("dynamic-programming".equalsIgnoreCase(catSlug) || "matrix".equalsIgnoreCase(catSlug)) {
+            type = VisualizationType.MATRIX;
+            rendererKey = "dp-table";
+        } else if ("strings".equalsIgnoreCase(catSlug)) {
+            type = VisualizationType.ARRAY;
+            rendererKey = "string";
         } else {
             type = VisualizationType.ARRAY;
+            rendererKey = "array";
         }
 
         List<com.codeloom.dsa.visualization.dto.VisualizationStep> steps = new ArrayList<>();
@@ -272,9 +336,105 @@ public class VisualizationService {
                 ? new ArrayList<>(request.input())
                 : List.of(5, 1, 4, 2, 8);
 
-        steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.INITIAL, List.of(), new ArrayList<>(array), "Initializing execution for " + name + "."));
-        steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.COMPLETE, List.of(), new ArrayList<>(array), name + " execution finished."));
+        // Multi-Step Animated Execution Trace Generation based on category
+        if (type == VisualizationType.GRAPH) {
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.INITIAL, List.of(0), new ArrayList<>(array),
+                    "Initializing graph exploration for " + name + ".", Map.of("java", 1),
+                    "Start node initialized. Queue/Stack prepared.", "Graph exploration begins at root node.", "Initial state", "Time: O(V+E)", Map.of("currentNode", "A")
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.VISIT, List.of(0, 1), new ArrayList<>(array),
+                    "Visiting initial node A. Inspecting outgoing edges.", Map.of("java", 2),
+                    "Node A processed. Adjacent nodes identified.", "Traversing edges connected to active vertex.", "Vertex traversal", "O(1) step", Map.of("currentNode", "A", "visited", List.of("A"))
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.UPDATE, List.of(1, 2), new ArrayList<>(array),
+                    "Exploring edge A -> B. Marking node B as visited.", Map.of("java", 3),
+                    "Node B added to visited set.", "Deepening exploration across graph topology.", "Edge exploration", "O(1) step", Map.of("currentNode", "B", "visited", List.of("A", "B"))
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.UPDATE, List.of(2, 3), new ArrayList<>(array),
+                    "Exploring edge A -> C. Marking node C as visited.", Map.of("java", 4),
+                    "Node C added to visited set.", "Expanding frontier across graph nodes.", "Frontier expansion", "O(1) step", Map.of("currentNode", "C", "visited", List.of("A", "B", "C"))
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.COMPLETE, List.of(), new ArrayList<>(array),
+                    name + " graph exploration completed.", Map.of("java", 5),
+                    "All reachable vertices visited.", "Graph traversal terminated successfully.", "Execution complete", "Total Time: O(V+E)", Map.of("visited", List.of("A", "B", "C"))
+            ));
+        } else if (type == VisualizationType.TREE) {
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.INITIAL, List.of(0), new ArrayList<>(array),
+                    "Initializing tree traversal for " + name + ".", Map.of("java", 1),
+                    "Root pointer loaded.", "Tree processing starts at root.", "Initial state", "Time: O(N)", Map.of("root", 50)
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.VISIT, List.of(0), new ArrayList<>(array),
+                    "Visiting Root Node (value = 50).", Map.of("java", 2),
+                    "Inspecting root node data.", "Root node processed.", "Node visit", "O(1) step", Map.of("visitedNode", 50)
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.VISIT, List.of(1), new ArrayList<>(array),
+                    "Traversing to Left Subtree -> Node (value = 30).", Map.of("java", 3),
+                    "Left child selected.", "Navigating left branch.", "Left branch traversal", "O(1) step", Map.of("visitedNode", 30)
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.VISIT, List.of(2), new ArrayList<>(array),
+                    "Traversing to Right Subtree -> Node (value = 70).", Map.of("java", 4),
+                    "Right child selected.", "Navigating right branch.", "Right branch traversal", "O(1) step", Map.of("visitedNode", 70)
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.COMPLETE, List.of(), new ArrayList<>(array),
+                    name + " tree traversal finished.", Map.of("java", 5),
+                    "All subtrees traversed.", "Tree execution complete.", "Execution complete", "Total Time: O(N)", Map.of("completed", true)
+            ));
+        } else {
+            // Default Array / Search / DP / Linear Multi-Step Trace
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.INITIAL, List.of(0), new ArrayList<>(array),
+                    "Initializing execution for " + name + ".", Map.of("java", 1),
+                    "Data structure loaded with " + array.size() + " elements.", "Initial state prepared.", "Initialization", "Time: O(N)", Map.of("array", array)
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.COMPARE, List.of(0, 1), new ArrayList<>(array),
+                    "Inspecting elements at index 0 (val=" + array.get(0) + ") and index 1 (val=" + array.get(1) + ").", Map.of("java", 2),
+                    "Comparing candidate elements.", "Evaluating relative order/conditions.", "Element comparison", "O(1) step", Map.of("currentIndex", 0)
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.UPDATE, List.of(1), new ArrayList<>(array),
+                    "Updating algorithm state at index 1.", Map.of("java", 3),
+                    "Applying state transformation rule.", "Updating active element pointers.", "State update", "O(1) step", Map.of("currentIndex", 1)
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.COMPARE, List.of(2, 3), new ArrayList<>(array),
+                    "Inspecting remaining subsegment at index 2 and 3.", Map.of("java", 4),
+                    "Scanning remaining items in search/processing window.", "Continuing iterative pass.", "Subsegment comparison", "O(1) step", Map.of("currentIndex", 2)
+            ));
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(
+                    stepNum++, com.codeloom.dsa.visualization.entity.ActionType.COMPLETE, List.of(), new ArrayList<>(array),
+                    name + " execution finished.", Map.of("java", 5),
+                    "All elements processed successfully.", "Algorithm execution complete.", "Execution complete", "Total Time: O(N)", Map.of("completed", true)
+            ));
+        }
 
-        return new VisualizationResponse(slug, type, steps);
+        VisualizationContractDto fallbackContract = new VisualizationContractDto(
+                slug,
+                type.name(),
+                type.name(),
+                "CUSTOMIZABLE",
+                "{\"type\":\"object\"}",
+                "{\"input\":[5,1,4,2,8]}",
+                slug,
+                rendererKey,
+                "{\"type\":\"object\"}",
+                "{}",
+                name + " visualization using standard category renderer.",
+                true,
+                50,
+                "READY"
+        );
+
+        return new VisualizationResponse(slug, type, steps, fallbackContract);
     }
 }

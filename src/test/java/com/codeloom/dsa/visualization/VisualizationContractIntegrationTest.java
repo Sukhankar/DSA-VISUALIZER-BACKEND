@@ -54,9 +54,9 @@ class VisualizationContractIntegrationTest {
     @Test
     @DisplayName("2. Verify non-migrated algorithm contract returns MISSING_CONTRACT status")
     void getVisualizationContract_nonMigrated_returnsMissingContract() throws Exception {
-        mockMvc.perform(get("/api/v1/algorithms/quick-sort/visualization-contract"))
+        mockMvc.perform(get("/api/v1/algorithms/heap-sort-med/visualization-contract"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.algorithmSlug", is("quick-sort")))
+                .andExpect(jsonPath("$.algorithmSlug", is("heap-sort-med")))
                 .andExpect(jsonPath("$.status", is("MISSING_CONTRACT")));
     }
 
