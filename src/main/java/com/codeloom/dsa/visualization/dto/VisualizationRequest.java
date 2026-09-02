@@ -28,6 +28,10 @@ public record VisualizationRequest(
 
         KnapsackInputDto knapsackInput
 ) {
+    public VisualizationRequest(List<Integer> input) {
+        this(null, input, null, null, null, null, null, null, null, null, null);
+    }
+
     public record KnapsackInputDto(
             List<Integer> weights,
             List<Integer> values,

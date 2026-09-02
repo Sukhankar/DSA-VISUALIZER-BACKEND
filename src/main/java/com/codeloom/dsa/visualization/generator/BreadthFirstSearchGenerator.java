@@ -66,6 +66,11 @@ public class BreadthFirstSearchGenerator implements VisualizationGenerator {
         }
 
         List<String> nodeIds = nodes.stream().map(GraphNodeDto::id).toList();
+
+        if (graph.startNode() != null && !graph.startNode().isBlank() && !nodeIds.contains(graph.startNode())) {
+            throw new IllegalArgumentException("Start node '" + graph.startNode() + "' is not present in graph nodes.");
+        }
+
         String startNode = (graph.startNode() != null && nodeIds.contains(graph.startNode()))
                 ? graph.startNode()
                 : nodeIds.get(0);
