@@ -1,10 +1,6 @@
 package com.codeloom.dsa.visualization.generator;
 
-import com.codeloom.dsa.visualization.dto.GraphEdgeDto;
-import com.codeloom.dsa.visualization.dto.GraphVisualizationRequest;
-import com.codeloom.dsa.visualization.dto.VisualizationRequest;
-import com.codeloom.dsa.visualization.dto.VisualizationResponse;
-import com.codeloom.dsa.visualization.dto.VisualizationStep;
+import com.codeloom.dsa.visualization.dto.*;
 import com.codeloom.dsa.visualization.entity.ActionType;
 import com.codeloom.dsa.visualization.entity.VisualizationType;
 import org.springframework.stereotype.Component;
@@ -14,49 +10,79 @@ import java.util.*;
 @Component
 public class BreadthFirstSearchGenerator implements VisualizationGenerator {
 
-    private static final String SLUG = "breadth-first-search";
+    private static final List<String> SUPPORTED_SLUGS = List.of(
+            "breadth-first-search",
+            "bfs",
+            "graph-bfs",
+            "bfs-traversal"
+    );
 
     @Override
     public boolean supports(String algorithmSlug) {
-        return SLUG.equalsIgnoreCase(algorithmSlug);
+        if (algorithmSlug == null) return false;
+        String s = algorithmSlug.toLowerCase();
+        return SUPPORTED_SLUGS.contains(s) || (s.contains("bfs") && !s.contains("dfs"));
     }
 
     @Override
     public VisualizationResponse generate(String algorithmSlug, VisualizationRequest request) {
-        if (request.graph() != null) {
-            return generateGraphBfs(request.graph());
-        }
+        GraphVisualizationRequest graphReq = (request != null && request.graph() != null)
+                ? request.graph()
+                : getDefaultGraph();
 
-        if (request.input() == null || request.input().isEmpty()) {
-            throw new IllegalArgumentException("Breadth-First Search requires graph payload or non-empty input list");
-        }
-
-        return generateArrayBfs(request.input());
+        return generateGraphBfs(algorithmSlug, graphReq);
     }
 
-    private VisualizationResponse generateGraphBfs(GraphVisualizationRequest graph) {
-        if (graph.nodes() == null || graph.nodes().isEmpty()) {
-            throw new IllegalArgumentException("Graph nodes list must not be empty");
-        }
-        if (graph.startNode() == null || !graph.nodes().contains(graph.startNode())) {
-            throw new IllegalArgumentException("Start node must be present in graph nodes");
+    private GraphVisualizationRequest getDefaultGraph() {
+        List<GraphNodeDto> nodes = List.of(
+                new GraphNodeDto("A", "A"),
+                new GraphNodeDto("B", "B"),
+                new GraphNodeDto("C", "C"),
+                new GraphNodeDto("D", "D"),
+                new GraphNodeDto("E", "E"),
+                new GraphNodeDto("F", "F")
+        );
+        List<GraphEdgeDto> edges = List.of(
+                new GraphEdgeDto("A-B", "A", "B", null),
+                new GraphEdgeDto("A-C", "A", "C", null),
+                new GraphEdgeDto("B-D", "B", "D", null),
+                new GraphEdgeDto("B-E", "B", "E", null),
+                new GraphEdgeDto("C-F", "C", "F", null),
+                new GraphEdgeDto("E-F", "E", "F", null)
+        );
+        return new GraphVisualizationRequest(nodes, edges, false, false, "A", null);
+    }
+
+    private VisualizationResponse generateGraphBfs(String slug, GraphVisualizationRequest graph) {
+        List<GraphNodeDto> nodes = graph.nodes() != null ? graph.nodes() : List.of();
+        List<GraphEdgeDto> edges = graph.edges() != null ? graph.edges() : List.of();
+        boolean isDirected = Boolean.TRUE.equals(graph.directed());
+        boolean isWeighted = Boolean.TRUE.equals(graph.weighted());
+
+        if (nodes.isEmpty()) {
+            GraphVisualizationRequest def = getDefaultGraph();
+            nodes = def.nodes();
+            edges = def.edges();
         }
 
-        // Build deterministic adjacency list based on input edge order
-        Map<String, List<String>> adjList = new LinkedHashMap<>();
-        for (String node : graph.nodes()) {
-            if (node == null) {
-                throw new IllegalArgumentException("Graph contains null node value");
-            }
-            adjList.put(node, new ArrayList<>());
+        List<String> nodeIds = nodes.stream().map(GraphNodeDto::id).toList();
+        String startNode = (graph.startNode() != null && nodeIds.contains(graph.startNode()))
+                ? graph.startNode()
+                : nodeIds.get(0);
+
+        Map<String, List<String>> adj = new LinkedHashMap<>();
+        for (String id : nodeIds) {
+            adj.put(id, new ArrayList<>());
         }
 
-        if (graph.edges() != null) {
-            for (GraphEdgeDto edge : graph.edges()) {
-                if (edge.from() == null || edge.to() == null || !adjList.containsKey(edge.from()) || !adjList.containsKey(edge.to())) {
-                    throw new IllegalArgumentException("Edge references an unknown or null graph node");
+        for (GraphEdgeDto edge : edges) {
+            String u = edge.source();
+            String v = edge.target();
+            if (adj.containsKey(u) && adj.containsKey(v)) {
+                adj.get(u).add(v);
+                if (!isDirected) {
+                    adj.get(v).add(u);
                 }
-                adjList.get(edge.from()).add(edge.to());
             }
         }
 
@@ -65,159 +91,63 @@ public class BreadthFirstSearchGenerator implements VisualizationGenerator {
 
         Queue<String> queue = new ArrayDeque<>();
         Set<String> visited = new LinkedHashSet<>();
+        List<String> traversedEdges = new ArrayList<>();
 
-        String startNode = graph.startNode();
-
-        // 1. Initial Step
-        steps.add(new VisualizationStep(
-                stepNum++,
-                ActionType.INITIAL,
-                List.of(),
-                List.of(),
-                null,
-                List.of(),
-                List.of(startNode),
-                "Starting Breadth-First Search from node " + startNode
-        ));
-
-        visited.add(startNode);
         queue.add(startNode);
+        visited.add(startNode);
+
+        // Step 1: Initial
+        GraphStateSnapshot initSnap = new GraphStateSnapshot(
+                nodes, edges, isDirected, isWeighted,
+                List.of(startNode), new ArrayList<>(visited), List.of(), List.of(),
+                new ArrayList<>(queue), List.of(), startNode, startNode, null,
+                Map.of(), Map.of(), List.of(), List.of(), null, List.of(), List.of(), null, null,
+                "Initialized BFS traversal starting from node " + startNode
+        );
+        steps.add(new VisualizationStep(stepNum++, ActionType.INITIAL, initSnap, initSnap.explanation(), Map.of(), null, null, null, null, null));
 
         while (!queue.isEmpty()) {
             String curr = queue.poll();
 
-            steps.add(new VisualizationStep(
-                    stepNum++,
-                    ActionType.VISIT,
-                    List.of(),
-                    List.of(),
-                    curr,
-                    new ArrayList<>(visited),
-                    new ArrayList<>(queue),
-                    "Visiting node " + curr
-            ));
+            GraphStateSnapshot visitSnap = new GraphStateSnapshot(
+                    nodes, edges, isDirected, isWeighted,
+                    List.of(curr), new ArrayList<>(visited), List.of(), new ArrayList<>(traversedEdges),
+                    new ArrayList<>(queue), List.of(), curr, startNode, null,
+                    Map.of(), Map.of(), List.of(), List.of(), null, List.of(), List.of(), null, null,
+                    "Dequeued and visiting node " + curr
+            );
+            steps.add(new VisualizationStep(stepNum++, ActionType.VISIT, visitSnap, visitSnap.explanation(), Map.of(), null, null, null, null, null));
 
-            List<String> neighbors = adjList.getOrDefault(curr, List.of());
-            List<String> newlyAdded = new ArrayList<>();
-
-            for (String nbr : neighbors) {
+            for (String nbr : adj.getOrDefault(curr, List.of())) {
+                String edgeId = curr + "-" + nbr;
                 if (!visited.contains(nbr)) {
                     visited.add(nbr);
                     queue.add(nbr);
-                    newlyAdded.add(nbr);
+                    traversedEdges.add(edgeId);
+
+                    GraphStateSnapshot insertSnap = new GraphStateSnapshot(
+                            nodes, edges, isDirected, isWeighted,
+                            List.of(nbr), new ArrayList<>(visited), List.of(edgeId), new ArrayList<>(traversedEdges),
+                            new ArrayList<>(queue), List.of(), nbr, startNode, null,
+                            Map.of(), Map.of(), List.of(), List.of(), null, List.of(), List.of(), null, null,
+                            "Enqueued unvisited neighbor " + nbr + " via edge " + curr + " -> " + nbr
+                    );
+                    steps.add(new VisualizationStep(stepNum++, ActionType.INSERT, insertSnap, insertSnap.explanation(), Map.of(), null, null, null, null, null));
                 }
             }
-
-            if (!newlyAdded.isEmpty()) {
-                steps.add(new VisualizationStep(
-                        stepNum++,
-                        ActionType.INSERT,
-                        List.of(),
-                        List.of(),
-                        curr,
-                        new ArrayList<>(visited),
-                        new ArrayList<>(queue),
-                        "Added neighbor(s) " + newlyAdded + " to the queue"
-                ));
-            }
         }
 
-        // 3. Complete Step
-        steps.add(new VisualizationStep(
-                stepNum,
-                ActionType.COMPLETE,
-                List.of(),
-                List.of(),
-                null,
-                new ArrayList<>(visited),
-                List.of(),
-                "Breadth-First Search completed! Traversal order: " + new ArrayList<>(visited)
-        ));
-
-        return new VisualizationResponse(
-                SLUG,
-                VisualizationType.GRAPH,
-                steps
+        GraphStateSnapshot completeSnap = new GraphStateSnapshot(
+                nodes, edges, isDirected, isWeighted,
+                List.of(), new ArrayList<>(visited), List.of(), new ArrayList<>(traversedEdges),
+                List.of(), List.of(), null, startNode, null,
+                Map.of(), Map.of(), List.of(), List.of(), null, List.of(), List.of(), null, null,
+                "BFS traversal completed! Visited nodes order: " + new ArrayList<>(visited)
         );
-    }
-
-    private VisualizationResponse generateArrayBfs(List<Integer> input) {
-        List<Integer> array = new ArrayList<>(input);
-        List<VisualizationStep> steps = new ArrayList<>();
-        int stepNum = 1;
-        int n = array.size();
-
-        steps.add(new VisualizationStep(
-                stepNum++,
-                ActionType.INITIAL,
-                List.of(),
-                new ArrayList<>(array),
-                "Initial Graph BFS. Start vertex at index 0"
-        ));
-
-        Deque<Integer> queue = new ArrayDeque<>();
-        boolean[] visited = new boolean[n];
-
-        queue.add(0);
-        visited[0] = true;
-
-        steps.add(new VisualizationStep(
-                stepNum++,
-                ActionType.SELECT,
-                List.of(0),
-                new ArrayList<>(array),
-                "Enqueued start vertex 0 (" + array.get(0) + ")"
-        ));
-
-        while (!queue.isEmpty()) {
-            int curr = queue.poll();
-
-            steps.add(new VisualizationStep(
-                    stepNum++,
-                    ActionType.VISIT,
-                    List.of(curr),
-                    new ArrayList<>(array),
-                    String.format("Dequeued and visited vertex %d (val=%d)", curr, array.get(curr))
-            ));
-
-            int left = 2 * curr + 1;
-            int right = 2 * curr + 2;
-
-            if (left < n && !visited[left]) {
-                visited[left] = true;
-                queue.add(left);
-                steps.add(new VisualizationStep(
-                        stepNum++,
-                        ActionType.INSERT,
-                        List.of(left),
-                        new ArrayList<>(array),
-                        String.format("Enqueued neighbor vertex %d (val=%d)", left, array.get(left))
-                ));
-            }
-
-            if (right < n && !visited[right]) {
-                visited[right] = true;
-                queue.add(right);
-                steps.add(new VisualizationStep(
-                        stepNum++,
-                        ActionType.INSERT,
-                        List.of(right),
-                        new ArrayList<>(array),
-                        String.format("Enqueued neighbor vertex %d (val=%d)", right, array.get(right))
-                ));
-            }
-        }
-
-        steps.add(new VisualizationStep(
-                stepNum,
-                ActionType.COMPLETE,
-                List.of(),
-                new ArrayList<>(array),
-                "Breadth-First Search completed! All reachable vertices visited."
-        ));
+        steps.add(new VisualizationStep(stepNum, ActionType.COMPLETE, completeSnap, completeSnap.explanation(), Map.of(), null, null, null, null, null));
 
         return new VisualizationResponse(
-                SLUG,
+                slug != null ? slug : "breadth-first-search",
                 VisualizationType.GRAPH,
                 steps
         );

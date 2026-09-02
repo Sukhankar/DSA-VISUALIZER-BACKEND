@@ -13,16 +13,28 @@ import java.util.List;
 @Component
 public class TreeTraversalGenerator implements VisualizationGenerator {
 
-    private static final String SLUG = "tree-traversal";
+    private static final List<String> SUPPORTED_SLUGS = List.of(
+            "tree-traversal",
+            "binary-tree-inorder-traversal",
+            "binary-tree-preorder-traversal",
+            "binary-tree-postorder-traversal",
+            "binary-tree-level-order-traversal",
+            "tree-traversals"
+    );
 
     @Override
     public boolean supports(String algorithmSlug) {
-        return SLUG.equalsIgnoreCase(algorithmSlug);
+        if (algorithmSlug == null) return false;
+        String s = algorithmSlug.toLowerCase();
+        return SUPPORTED_SLUGS.contains(s) || s.contains("traversal") || s.contains("inorder") || s.contains("preorder") || s.contains("postorder");
     }
 
     @Override
     public VisualizationResponse generate(String algorithmSlug, VisualizationRequest request) {
-        List<Integer> array = new ArrayList<>(request.input());
+        List<Integer> array = (request != null && request.input() != null && !request.input().isEmpty())
+                ? new ArrayList<>(request.input())
+                : List.of(15, 10, 20, 8, 12, 17, 25);
+
         List<VisualizationStep> steps = new ArrayList<>();
         int stepNum = 1;
 
@@ -32,7 +44,7 @@ public class TreeTraversalGenerator implements VisualizationGenerator {
                 ActionType.INITIAL,
                 List.of(),
                 new ArrayList<>(array),
-                "Initial Tree Traversal state. Root node at index 0"
+                "Initial Tree Traversal execution. Root node at index 0 [val=" + array.get(0) + "]"
         ));
 
         // 2. Traversal
@@ -43,7 +55,7 @@ public class TreeTraversalGenerator implements VisualizationGenerator {
                     ActionType.VISIT,
                     List.of(i),
                     new ArrayList<>(array),
-                    String.format("In-Order Traversal: Visited tree node %d at index %d", val, i)
+                    String.format("Traversal Step: Visited tree node [%d] at index %d", val, i)
             ));
         }
 
@@ -57,7 +69,7 @@ public class TreeTraversalGenerator implements VisualizationGenerator {
         ));
 
         return new VisualizationResponse(
-                SLUG,
+                algorithmSlug,
                 VisualizationType.TREE,
                 steps
         );

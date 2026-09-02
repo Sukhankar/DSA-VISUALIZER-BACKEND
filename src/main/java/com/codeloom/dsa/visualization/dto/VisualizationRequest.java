@@ -5,11 +5,32 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record VisualizationRequest(
-        @Size(max = 50, message = "Input list size must not exceed 50 elements")
+        String type,
+
+        @Size(max = 100, message = "Input list size must not exceed 100 elements")
         List<Integer> input,
 
         Integer target,
 
-        GraphVisualizationRequest graph
+        GraphVisualizationRequest graph,
+
+        List<PointDto> points,
+
+        List<Integer> listInput,
+
+        List<Integer> stackInput,
+
+        List<Integer> queueInput,
+
+        List<String> trieInput,
+
+        List<List<Integer>> matrixInput,
+
+        KnapsackInputDto knapsackInput
 ) {
+    public record KnapsackInputDto(
+            List<Integer> weights,
+            List<Integer> values,
+            Integer capacity
+    ) {}
 }

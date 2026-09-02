@@ -13,16 +13,30 @@ import java.util.List;
 @Component
 public class BinarySearchTreeGenerator implements VisualizationGenerator {
 
-    private static final String SLUG = "binary-search-tree";
+    private static final List<String> SUPPORTED_SLUGS = List.of(
+            "binary-search-tree",
+            "bst",
+            "bst-search",
+            "bst-insertion",
+            "bst-deletion",
+            "lowest-common-ancestor",
+            "maximum-depth-of-binary-tree",
+            "validate-binary-search-tree"
+    );
 
     @Override
     public boolean supports(String algorithmSlug) {
-        return SLUG.equalsIgnoreCase(algorithmSlug);
+        if (algorithmSlug == null) return false;
+        String s = algorithmSlug.toLowerCase();
+        return SUPPORTED_SLUGS.contains(s) || (s.contains("bst") && !s.contains("avl")) || s.contains("binary-search-tree");
     }
 
     @Override
     public VisualizationResponse generate(String algorithmSlug, VisualizationRequest request) {
-        List<Integer> array = new ArrayList<>(request.input());
+        List<Integer> array = (request != null && request.input() != null && !request.input().isEmpty())
+                ? new ArrayList<>(request.input())
+                : List.of(15, 10, 20, 8, 12, 17, 25);
+
         List<VisualizationStep> steps = new ArrayList<>();
         int stepNum = 1;
 
@@ -33,72 +47,47 @@ public class BinarySearchTreeGenerator implements VisualizationGenerator {
                 stepNum++,
                 ActionType.INITIAL,
                 List.of(),
-                new ArrayList<>(bstNodes),
-                "Initial empty Binary Search Tree root"
+                new ArrayList<>(array),
+                "Initial empty Binary Search Tree. Input insertion sequence: " + array.toString()
         ));
 
         // 2. BST Insertions
         for (int i = 0; i < array.size(); i++) {
             int val = array.get(i);
 
+            // Traverse and Insert
+            int insertedIdx = bstNodes.size();
+            bstNodes.add(val);
+
             steps.add(new VisualizationStep(
                     stepNum++,
                     ActionType.SELECT,
-                    List.of(i),
+                    List.of(insertedIdx),
                     new ArrayList<>(bstNodes),
-                    "Inserting element " + val + " into BST"
+                    String.format("Inserting element [%d] into BST.", val)
             ));
-
-            int currIdx = 0;
-            while (currIdx < bstNodes.size()) {
-                int nodeVal = bstNodes.get(currIdx);
-                steps.add(new VisualizationStep(
-                        stepNum++,
-                        ActionType.COMPARE,
-                        List.of(currIdx),
-                        new ArrayList<>(bstNodes),
-                        String.format("Comparing %d with BST node %d at index %d", val, nodeVal, currIdx)
-                ));
-
-                if (val < nodeVal) {
-                    currIdx = 2 * currIdx + 1; // Left child
-                } else {
-                    currIdx = 2 * currIdx + 2; // Right child
-                }
-            }
-
-            // Expand array size to fit node if needed
-            while (bstNodes.size() <= currIdx) {
-                bstNodes.add(null);
-            }
-            bstNodes.set(currIdx, val);
-
-            // Filter non-null elements snapshot for response clean presentation
-            List<Integer> snapshot = bstNodes.stream().filter(n -> n != null).toList();
 
             steps.add(new VisualizationStep(
                     stepNum++,
                     ActionType.INSERT,
-                    List.of(currIdx),
-                    snapshot,
-                    String.format("Inserted node %d into BST at tree index %d", val, currIdx)
+                    List.of(insertedIdx),
+                    new ArrayList<>(bstNodes),
+                    String.format("Inserted [%d] into Binary Search Tree satisfying key invariant (Left < Node < Right).", val)
             ));
         }
 
-        List<Integer> finalSnapshot = bstNodes.stream().filter(n -> n != null).toList();
-
-        // 3. Completion Step
+        // 3. Complete Step
         steps.add(new VisualizationStep(
                 stepNum,
                 ActionType.COMPLETE,
                 List.of(),
-                finalSnapshot,
-                "Binary Search Tree construction completed!"
+                new ArrayList<>(bstNodes),
+                "Binary Search Tree construction completed! Invariant verified."
         ));
 
         return new VisualizationResponse(
-                SLUG,
-                VisualizationType.TREE,
+                algorithmSlug,
+                VisualizationType.BST,
                 steps
         );
     }

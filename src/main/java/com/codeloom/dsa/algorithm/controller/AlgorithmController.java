@@ -128,4 +128,20 @@ public class AlgorithmController {
     ) {
         return algorithmService.getRichAlgorithmDetails(slug);
     }
+
+    @GetMapping("/{slug}/learning")
+    @Operation(summary = "Get multi-level algorithm learning engine content", description = "Retrieves structured educational lessons for BEGINNER, INTERMEDIATE, or ADVANCED levels.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Structured learning engine content retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Algorithm not found with given slug")
+    })
+    public com.codeloom.dsa.algorithm.dto.AlgorithmLearningResponse getLearningContent(
+            @Parameter(description = "Algorithm slug (e.g. 'bubble-sort', 'binary-search')")
+            @PathVariable String slug,
+
+            @Parameter(description = "Educational depth level (BEGINNER, INTERMEDIATE, ADVANCED)")
+            @RequestParam(required = false) com.codeloom.dsa.learning.entity.ExperienceLevel level
+    ) {
+        return algorithmService.getLearningContent(slug, level);
+    }
 }

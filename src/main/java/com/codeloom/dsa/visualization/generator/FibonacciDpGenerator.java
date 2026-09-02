@@ -94,7 +94,7 @@ public class FibonacciDpGenerator implements VisualizationGenerator {
 
         return new VisualizationResponse(
                 SLUG,
-                VisualizationType.ARRAY,
+                VisualizationType.DP_TABLE,
                 steps
         );
     }

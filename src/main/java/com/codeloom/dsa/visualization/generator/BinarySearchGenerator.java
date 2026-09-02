@@ -161,7 +161,7 @@ public class BinarySearchGenerator implements VisualizationGenerator {
 
         return new VisualizationResponse(
                 SLUG,
-                VisualizationType.ARRAY,
+                VisualizationType.ARRAY_INDEXED,
                 steps
         );
     }

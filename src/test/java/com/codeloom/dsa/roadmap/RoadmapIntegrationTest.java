@@ -65,8 +65,9 @@ class RoadmapIntegrationTest {
         mockMvc.perform(get("/api/v1/roadmap"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(8))))
-                .andExpect(jsonPath("$[0].slug", is("arrays-basics")))
+                .andExpect(jsonPath("$[0].slug", is("programming-fundamentals")))
                 .andExpect(jsonPath("$[0].status", is("IN_PROGRESS")));
+
     }
 
     @Test

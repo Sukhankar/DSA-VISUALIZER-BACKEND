@@ -88,7 +88,7 @@ public class TwoSumGenerator implements VisualizationGenerator {
 
         return new VisualizationResponse(
                 SLUG,
-                VisualizationType.ARRAY,
+                VisualizationType.TWO_POINTER,
                 steps
         );
     }

@@ -36,108 +36,120 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class PracticeSessionIntegrationTest {
 
-    @Autowired
-    private WebApplicationContext context;
+        @Autowired
+        private WebApplicationContext context;
 
-    private ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        private ObjectMapper objectMapper = new ObjectMapper()
+                        .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
-    @Autowired
-    private UserRepository userRepository;
+        @Autowired
+        private UserRepository userRepository;
 
-    @Autowired
-    private RoleRepository roleRepository;
+        @Autowired
+        private RoleRepository roleRepository;
 
-    @Autowired
-    private ProblemRepository problemRepository;
+        @Autowired
+        private ProblemRepository problemRepository;
 
-    private MockMvc mockMvc;
-    private User testUser;
+        private MockMvc mockMvc;
+        private User testUser;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .apply(SecurityMockMvcConfigurers.springSecurity())
-                .build();
+        @BeforeEach
+        void setUp() {
+                mockMvc = MockMvcBuilders.webAppContextSetup(context)
+                                .apply(SecurityMockMvcConfigurers.springSecurity())
+                                .build();
 
-        String email = "practiceuser@codeloom.com";
-        if (userRepository.findByEmail(email).isEmpty()) {
-            Role userRole = roleRepository.findByName("ROLE_USER")
-                    .orElseGet(() -> roleRepository.save(new Role("ROLE_USER")));
+                String email = "practiceuser@codeloom.com";
+                if (userRepository.findByEmail(email).isEmpty()) {
+                        Role userRole = roleRepository.findByName("ROLE_USER")
+                                        .orElseGet(() -> roleRepository.save(new Role("ROLE_USER")));
 
-            testUser = new User(email, "practiceuser", "password123");
-            testUser.addRole(userRole);
-            userRepository.save(testUser);
-        } else {
-            testUser = userRepository.findByEmail(email).get();
+                        testUser = new User(email, "practiceuser", "password123");
+                        testUser.addRole(userRole);
+                        userRepository.save(testUser);
+                } else {
+                        testUser = userRepository.findByEmail(email).get();
+                }
         }
-    }
 
-    @Test
-    @WithMockUser(username = "practiceuser@codeloom.com", roles = {"USER"})
-    void getArenaOverview_returnsPracticeMetrics() throws Exception {
-        mockMvc.perform(get("/api/v1/practice/arena")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dailyChallenge", notNullValue()))
-                .andExpect(jsonPath("$.dailyChallenge.problem", notNullValue()))
-                .andExpect(jsonPath("$.streak", notNullValue()))
-                .andExpect(jsonPath("$.xp", notNullValue()));
-    }
+        @Test
+        @WithMockUser(username = "practiceuser@codeloom.com", roles = { "USER" })
+        void getArenaOverview_returnsPracticeMetrics() throws Exception {
+                mockMvc.perform(get("/api/v1/practice/arena")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.dailyChallenge", notNullValue()))
+                                .andExpect(jsonPath("$.dailyChallenge.problem", notNullValue()))
+                                .andExpect(jsonPath("$.streak", notNullValue()))
+                                .andExpect(jsonPath("$.xp", notNullValue()));
+        }
 
-    @Test
-    @WithMockUser(username = "practiceuser@codeloom.com", roles = {"USER"})
-    void createSession_quickMode_createsThreeProblemSession() throws Exception {
-        CreatePracticeSessionRequest request = new CreatePracticeSessionRequest(
-                PracticeMode.QUICK,
-                null,
-                null,
-                null
-        );
+        @Test
+        @WithMockUser(username = "practiceuser@codeloom.com", roles = { "USER" })
+        void createSession_quickMode_createsThreeProblemSession() throws Exception {
+                CreatePracticeSessionRequest request = new CreatePracticeSessionRequest(
+                                PracticeMode.QUICK,
+                                null,
+                                null,
+                                null);
 
-        mockMvc.perform(post("/api/v1/practice/sessions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", notNullValue()))
-                .andExpect(jsonPath("$.mode", is("QUICK")))
-                .andExpect(jsonPath("$.status", is("IN_PROGRESS")))
-                .andExpect(jsonPath("$.problems", hasSize(greaterThan(0))));
-    }
+                mockMvc.perform(post("/api/v1/practice/sessions")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.id", notNullValue()))
+                                .andExpect(jsonPath("$.mode", is("QUICK")))
+                                .andExpect(jsonPath("$.status", is("IN_PROGRESS")))
+                                .andExpect(jsonPath("$.problems", hasSize(greaterThan(0))));
+        }
 
-    @Test
-    @WithMockUser(username = "practiceuser@codeloom.com", roles = {"USER"})
-    void submitInSession_acceptedCode_updatesSessionScoreAndXp() throws Exception {
-        CreatePracticeSessionRequest createRequest = new CreatePracticeSessionRequest(
-                PracticeMode.QUICK,
-                null,
-                null,
-                null
-        );
+        @Test
+        @WithMockUser(username = "practiceuser@codeloom.com", roles = { "USER" })
+        void submitInSession_acceptedCode_updatesSessionScoreAndXp() throws Exception {
+                CreatePracticeSessionRequest createRequest = new CreatePracticeSessionRequest(
+                                PracticeMode.QUICK,
+                                null,
+                                null,
+                                null);
 
-        String createResponseBody = mockMvc.perform(post("/api/v1/practice/sessions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+                String createResponseBody = mockMvc.perform(post("/api/v1/practice/sessions")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(createRequest)))
+                                .andExpect(status().isCreated())
+                                .andReturn().getResponse().getContentAsString();
 
-        String sessionIdStr = objectMapper.readTree(createResponseBody).get("id").asText();
-        String problemIdStr = objectMapper.readTree(createResponseBody).get("problems").get(0).get("problem").get("id").asText();
-        UUID sessionId = UUID.fromString(sessionIdStr);
-        UUID problemId = UUID.fromString(problemIdStr);
+                String sessionIdStr = objectMapper.readTree(createResponseBody).get("id").asText();
+                String problemIdStr = objectMapper.readTree(createResponseBody).get("problems").get(0).get("problem")
+                                .get("id").asText();
+                String slug = objectMapper.readTree(createResponseBody).get("problems").get(0).get("problem")
+                                .get("slug").asText();
+                UUID sessionId = UUID.fromString(sessionIdStr);
+                UUID problemId = UUID.fromString(problemIdStr);
 
-        SessionSubmitRequest submitRequest = new SessionSubmitRequest(
-                problemId,
-                "PYTHON",
-                "def solve(): return True"
-        );
+                String validCode = switch (slug) {
+                        case "binary-search-problem" ->
+                                "public class Solution { public int solve(int[] nums, int target) { int l=0, r=nums.length-1; while(l<=r){ int m=l+(r-l)/2; if(nums[m]==target) return m; if(nums[m]<target) l=m+1; else r=m-1; } return -1; } }";
+                        case "two-sum" ->
+                                "public class Solution { public int[] solve(int[] nums, int target) { for(int i=0; i<nums.length; i++) { for(int j=i+1; j<nums.length; j++) { if(nums[i]+nums[j]==target) return new int[]{i,j}; } } return new int[]{0,0}; } }";
+                        case "valid-parentheses" ->
+                                "public class Solution { public boolean solve(String s) { java.util.Stack<Character> st = new java.util.Stack<>(); for(char c : s.toCharArray()) { if(c=='(') st.push(')'); else if(c=='{') st.push('}'); else if(c=='[') st.push(']'); else if(st.isEmpty() || st.pop()!=c) return false; } return st.isEmpty(); } }";
+                        default ->
+                                "public class Solution { public int solve(int[] nums) { int max=nums[0], curr=nums[0]; for(int i=1; i<nums.length; i++) { curr=Math.max(nums[i], curr+nums[i]); max=Math.max(max, curr); } return max; } }";
+                };
 
-        mockMvc.perform(post("/api/v1/practice/sessions/" + sessionId + "/submit")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(submitRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.submission", notNullValue()))
-                .andExpect(jsonPath("$.session", notNullValue()))
-                .andExpect(jsonPath("$.session.solvedProblems", greaterThanOrEqualTo(1)));
-    }
+                SessionSubmitRequest submitRequest = new SessionSubmitRequest(
+                                problemId,
+                                "JAVA",
+                                validCode);
+
+                mockMvc.perform(post("/api/v1/practice/sessions/" + sessionId + "/submit")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(submitRequest)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.submission", notNullValue()))
+                                .andExpect(jsonPath("$.session", notNullValue()))
+                                .andExpect(jsonPath("$.session.solvedProblems", greaterThanOrEqualTo(1)));
+        }
+
 }

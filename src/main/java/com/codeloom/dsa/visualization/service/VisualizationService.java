@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import java.util.Map;
 
 @Service
 @Transactional(readOnly = true)
@@ -38,8 +38,19 @@ public class VisualizationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Algorithm not found with slug: " + slug));
 
         // 2. Validate request input payload
-        if (request.graph() == null && (request.input() == null || request.input().isEmpty())) {
-            throw new IllegalArgumentException("Input list must not be empty");
+        if (request != null && request.input() != null && request.input().isEmpty()) {
+            boolean hasOtherPayload = (request.graph() != null)
+                    || (request.points() != null && !request.points().isEmpty())
+                    || (request.listInput() != null && !request.listInput().isEmpty())
+                    || (request.stackInput() != null && !request.stackInput().isEmpty())
+                    || (request.queueInput() != null && !request.queueInput().isEmpty())
+                    || (request.trieInput() != null && !request.trieInput().isEmpty())
+                    || (request.matrixInput() != null && !request.matrixInput().isEmpty())
+                    || (request.knapsackInput() != null)
+                    || (request.target() != null);
+            if (!hasOtherPayload) {
+                throw new IllegalArgumentException("Input list must not be empty");
+            }
         }
 
         // 3. Find supporting generator
@@ -69,40 +80,47 @@ public class VisualizationService {
         List<com.codeloom.dsa.visualization.dto.VisualizationStep> steps = new ArrayList<>();
         int stepNum = 1;
 
+        List<Integer> treeInput = (request != null && request.input() != null && !request.input().isEmpty())
+                ? new ArrayList<>(request.input())
+                : List.of(15, 10, 20, 8, 12, 17, 25);
+
+        List<Integer> listInput = (request != null && request.input() != null && !request.input().isEmpty())
+                ? new ArrayList<>(request.input())
+                : List.of(10, 20, 30, 40, 50);
 
         if (type == VisualizationType.TREE) {
-            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.INITIAL, List.of(), List.of(), "Initializing " + name + " tree structure execution.",
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.INITIAL, List.of(), new ArrayList<>(treeInput), "Initializing " + name + " tree structure execution.",
                     Map.of("java", 1, "python", 1, "cpp", 1, "pseudocode", 1),
                     "Initializing tree node references. Memory stack allocated for recursive traversal.",
                     "Root pointer set. Invariant: Tree maintains parent-child pointer relations.",
                     "To establish initial search boundaries before visiting child subtrees.",
                     "Space: O(H) recursive stack depth | Time: O(1) initialization"));
-            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.VISIT, List.of(), List.of(), "Visiting root node [10] for tree query operation.",
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.VISIT, List.of(), new ArrayList<>(treeInput), "Visiting root node [15] for tree query operation.",
                     Map.of("java", 3, "python", 3, "cpp", 3, "pseudocode", 2),
-                    "Inspecting root node value 10 to decide whether to search left or right subtree.",
+                    "Inspecting root node value 15 to decide whether to search left or right subtree.",
                     "Root evaluation: Compare target with current node key to determine recursive branch direction.",
                     "Subtree selection depends on whether key is smaller or larger than root value.",
                     "Time: O(1) comparison per node | Space: O(1) pointer lookup"));
-            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.COMPLETE, List.of(), List.of(), name + " tree execution complete! Range result verified.",
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.COMPLETE, List.of(), new ArrayList<>(treeInput), name + " tree execution complete! Range result verified.",
                     Map.of("java", 10, "python", 10, "cpp", 10, "pseudocode", 5),
                     "Tree traversal has reached leaf condition and verified result successfully.",
                     "Terminal condition reached. Total visited nodes bounded by O(log N) to O(N).",
                     "All requested nodes processed according to binary tree constraints.",
                     "Overall Time Complexity: O(log N) best/avg, O(N) worst case | Space: O(H)"));
         } else if (type == VisualizationType.LINKED_LIST) {
-            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.INITIAL, List.of(), List.of(), "Initializing " + name + " linked list node structure.",
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.INITIAL, List.of(), new ArrayList<>(listInput), "Initializing " + name + " linked list node structure.",
                     Map.of("java", 1, "python", 1, "cpp", 1, "pseudocode", 1),
                     "Setting up HEAD pointer to start linked list traversal.",
                     "Pointer allocation. Head pointer points to initial Node memory address.",
                     "Linked list operations must start from HEAD since memory locations are non-contiguous.",
                     "Space: O(1) auxiliary pointer | Time: O(1) initialization"));
-            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.VISIT, List.of(), List.of(), "Setting HEAD pointer to initial Node [10].",
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.VISIT, List.of(0), new ArrayList<>(listInput), "Setting HEAD pointer to initial Node [" + listInput.get(0) + "].",
                     Map.of("java", 2, "python", 2, "cpp", 2, "pseudocode", 2),
-                    "Traversing node 10. Following current.next pointer to inspect data payload.",
+                    "Traversing node " + listInput.get(0) + ". Following current.next pointer to inspect data payload.",
                     "O(1) pointer dereference operation: node = node.next.",
                     "To reach target node index linearly without random access.",
                     "Time: O(1) per node traversal step | Space: O(1)"));
-            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.COMPLETE, List.of(), List.of(), name + " linked list operation complete!",
+            steps.add(new com.codeloom.dsa.visualization.dto.VisualizationStep(stepNum++, com.codeloom.dsa.visualization.entity.ActionType.COMPLETE, List.of(), new ArrayList<>(listInput), name + " linked list operation complete!",
                     Map.of("java", 8, "python", 8, "cpp", 8, "pseudocode", 5),
                     "Traversal reached null pointer (end of list). Operation successful.",
                     "Terminal condition node.next == null satisfied.",
@@ -200,4 +218,3 @@ public class VisualizationService {
         return new VisualizationResponse(slug, type, steps);
     }
 }
-

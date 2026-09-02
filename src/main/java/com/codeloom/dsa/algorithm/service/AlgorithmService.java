@@ -26,20 +26,30 @@ public class AlgorithmService {
     private final AlgorithmExampleRepository exampleRepository;
     private final AlgorithmImplementationRepository implementationRepository;
     private final RelatedAlgorithmRepository relatedRepository;
+    private final com.codeloom.dsa.algorithm.repository.AlgorithmLearningContentRepository learningContentRepository;
+    private final com.codeloom.dsa.algorithm.repository.AlgorithmLearningAdvancedRepository learningAdvancedRepository;
+    private final com.codeloom.dsa.algorithm.repository.AlgorithmLearningPracticeRepository learningPracticeRepository;
 
     public AlgorithmService(
             AlgorithmRepository algorithmRepository,
             AlgorithmCategoryRepository categoryRepository,
             AlgorithmExampleRepository exampleRepository,
             AlgorithmImplementationRepository implementationRepository,
-            RelatedAlgorithmRepository relatedRepository
+            RelatedAlgorithmRepository relatedRepository,
+            com.codeloom.dsa.algorithm.repository.AlgorithmLearningContentRepository learningContentRepository,
+            com.codeloom.dsa.algorithm.repository.AlgorithmLearningAdvancedRepository learningAdvancedRepository,
+            com.codeloom.dsa.algorithm.repository.AlgorithmLearningPracticeRepository learningPracticeRepository
     ) {
         this.algorithmRepository = algorithmRepository;
         this.categoryRepository = categoryRepository;
         this.exampleRepository = exampleRepository;
         this.implementationRepository = implementationRepository;
         this.relatedRepository = relatedRepository;
+        this.learningContentRepository = learningContentRepository;
+        this.learningAdvancedRepository = learningAdvancedRepository;
+        this.learningPracticeRepository = learningPracticeRepository;
     }
+
 
     public List<AlgorithmCategoryResponse> getAllCategories() {
         return categoryRepository.findAll()
@@ -320,6 +330,178 @@ public class AlgorithmService {
         }
 
         categoryRepository.delete(category);
+    }
+
+    public AlgorithmLearningResponse getLearningContent(String slug, com.codeloom.dsa.learning.entity.ExperienceLevel level) {
+        Algorithm algorithm = algorithmRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Algorithm not found: " + slug));
+
+        com.codeloom.dsa.learning.entity.ExperienceLevel reqLevel = level != null ? level : com.codeloom.dsa.learning.entity.ExperienceLevel.BEGINNER;
+
+        var optContent = learningContentRepository.findByAlgorithmIdAndLevel(algorithm.getId(), reqLevel);
+        if (optContent.isPresent()) {
+            var c = optContent.get();
+            var advOpt = learningAdvancedRepository.findByLearningContentId(c.getId());
+            var advRes = advOpt.map(a -> new AlgorithmLearningResponse.AdvancedTheoryResponse(
+                    a.getMathematicalFoundation(),
+                    a.getInvariant(),
+                    a.getCorrectnessProof(),
+                    a.getRecurrence(),
+                    a.getRecurrenceSolution(),
+                    a.getOptimization(),
+                    a.getMemoryAnalysis(),
+                    a.getAdvancedTradeoffs(),
+                    a.getCompetitiveProgrammingNotes()
+            )).orElse(null);
+
+            var practiceList = learningPracticeRepository.findByLearningContentIdOrderByDisplayOrderAsc(c.getId())
+                    .stream()
+                    .map(p -> new AlgorithmLearningResponse.PracticeRecommendationResponse(
+                            p.getProblemTitle(),
+                            p.getProblemSlug(),
+                            p.getDifficulty(),
+                            p.getPlatform()
+                    ))
+                    .toList();
+
+            List<String> steps = List.of(
+                    "1. Initialize algorithm state & boundary pointers.",
+                    "2. Compare candidate values or expand search frontier.",
+                    "3. Apply state transition or swap elements into place.",
+                    "4. Repeat until exit condition is satisfied."
+            );
+            if (c.getHowItWorks() != null && c.getHowItWorks().startsWith("[")) {
+                try {
+                    steps = List.of(c.getHowItWorks().replaceAll("[\\[\\]\"]", "").split(",\\s*"));
+                } catch (Exception ignored) {}
+            }
+
+            return new AlgorithmLearningResponse(
+                    algorithm.getId(),
+                    algorithm.getName(),
+                    algorithm.getSlug(),
+                    reqLevel,
+                    c.getIntroduction(),
+                    c.getProblemStatement(),
+                    c.getIntuition(),
+                    c.getWhyItWorks(),
+                    steps,
+                    c.getPseudocode(),
+                    c.getComplexitySummary(),
+                    c.getWhenToUse(),
+                    c.getWhenNotToUse(),
+                    c.getAdvantages(),
+                    c.getLimitations(),
+                    c.getCommonMistakes(),
+                    c.getInterviewTips(),
+                    c.getImplementationNotes(),
+                    advRes,
+                    practiceList
+            );
+        }
+
+        // Dynamic fallback generation if specific DB row is not present
+        return generateDynamicLearningContent(algorithm, reqLevel);
+    }
+
+    private AlgorithmLearningResponse generateDynamicLearningContent(Algorithm algorithm, com.codeloom.dsa.learning.entity.ExperienceLevel level) {
+        String name = algorithm.getName();
+        String cat = algorithm.getCategory().getName();
+
+        List<AlgorithmLearningResponse.PracticeRecommendationResponse> defaultPractice = List.of(
+                new AlgorithmLearningResponse.PracticeRecommendationResponse(name + " Fundamentals", algorithm.getSlug(), "EASY", "CodeLoom Arena"),
+                new AlgorithmLearningResponse.PracticeRecommendationResponse(name + " Advanced Optimization", algorithm.getSlug(), "MEDIUM", "CodeLoom Arena")
+        );
+
+        if (level == com.codeloom.dsa.learning.entity.ExperienceLevel.BEGINNER) {
+            return new AlgorithmLearningResponse(
+                    algorithm.getId(), name, algorithm.getSlug(), level,
+                    name + " is a beginner-friendly " + cat.toLowerCase() + " algorithm.",
+                    "Reorder or search input data efficiently using step-by-step state checks.",
+                    "Think of it like arranging cards in your hands or finding a word in a physical dictionary.",
+                    "By following consistent rules at each step, we guarantee reaching the correct result.",
+                    List.of(
+                            "1. Look at the current input elements.",
+                            "2. Compare the elements using decision rules.",
+                            "3. Update your position or swap elements.",
+                            "4. Stop when the job is done!"
+                    ),
+                    "// Beginner Pseudocode\nfor item in array:\n  if condition:\n    process(item)",
+                    "Time: " + (algorithm.getTimeComplexity() != null ? algorithm.getTimeComplexity() : "O(N)") + " | Space: " + (algorithm.getSpaceComplexity() != null ? algorithm.getSpaceComplexity() : "O(1)"),
+                    "• Small datasets\n• Educational contexts & initial learning",
+                    "• Massive real-time data streams",
+                    "• Easy to implement\n• Low memory footprint",
+                    "• Can be slow for huge inputs",
+                    "• Off-by-one errors in loop boundaries\n• Incorrect conditional comparison signs",
+                    "Mention that you always check empty arrays and single-element inputs first!",
+                    "Start with simple arrays before attempting edge cases.",
+                    null,
+                    defaultPractice
+            );
+        } else if (level == com.codeloom.dsa.learning.entity.ExperienceLevel.INTERMEDIATE) {
+            return new AlgorithmLearningResponse(
+                    algorithm.getId(), name, algorithm.getSlug(), level,
+                    name + " provides structured " + cat.toLowerCase() + " state transitions with formal bounds.",
+                    "Given input structure I, produce output O satisfying target invariants.",
+                    "Reduces redundant comparisons by maintaining active boundary pointers.",
+                    "Every iteration reduces the remaining problem space according to asymptotic rules.",
+                    List.of(
+                            "1. Initialize boundary pointers and tracking variables.",
+                            "2. Execute loop invariant checks over active interval.",
+                            "3. Mutate array state or traverse child nodes.",
+                            "4. Return processed target result."
+                    ),
+                    "function " + algorithm.getSlug().replace("-", "") + "(data):\n  initialize State\n  while not Done:\n    step(State)",
+                    "Best/Avg/Worst Time: " + algorithm.getTimeComplexity() + " | Auxiliary Space: " + algorithm.getSpaceComplexity(),
+                    "• Production services requiring reliable performance\n• Standard interview problem patterns",
+                    "• When specialized cache-oblivious algorithms exist for specific hardware",
+                    "• Proven asymptotic bounds\n• Reusable across technical domains",
+                    "• Memory overhead depending on recursion stack depth",
+                    "• Failing to reset state between iterations\n• Memory leaks in pointer manipulation",
+                    "Focus on explaining time complexity derivations and edge-case handling in technical interviews.",
+                    "Verify loop termination conditions carefully during whiteboarding.",
+                    null,
+                    defaultPractice
+            );
+        } else {
+            // ADVANCED
+            AlgorithmLearningResponse.AdvancedTheoryResponse adv = new AlgorithmLearningResponse.AdvancedTheoryResponse(
+                    "Mathematical Formulation: State space S and transition function f: S -> S.",
+                    "Invariant: At step k, property P(k) holds over processed sub-range.",
+                    "Correctness Proof: Proven by Mathematical Induction over input length N.",
+                    "Recurrence Relation: T(N) = aT(N/b) + f(N).",
+                    "Solution via Master Theorem: " + (algorithm.getTimeComplexity() != null ? algorithm.getTimeComplexity() : "O(N log N)"),
+                    "Optimization: Bitwise operations, cache line padding, and SIMD parallelization.",
+                    "Memory Behavior: Locality of reference and CPU cache hierarchy implications.",
+                    "Trade-off between time complexity reduction and memory stack allocation.",
+                    "Competitive Programming: Watch out for integer overflow and custom comparator speed."
+            );
+
+            return new AlgorithmLearningResponse(
+                    algorithm.getId(), name, algorithm.getSlug(), level,
+                    "Advanced mathematical formulation, invariants, and memory behavior of " + name + ".",
+                    "Strict formal specifications over arbitrary input structures.",
+                    "Eliminates inversion bounds and optimizes instruction cache pipeline throughput.",
+                    "Proves strict convergence to optimal state in finite computational steps.",
+                    List.of(
+                            "1. Establish global inductive state invariants.",
+                            "2. Execute cache-aligned state updates.",
+                            "3. Maintain invariant P across recursive sub-problems.",
+                            "4. Output proven optimal solution."
+                    ),
+                    "template <typename T>\nvoid " + algorithm.getSlug().replace("-", "") + "(std::vector<T>& data) {\n  // Advanced C++ implementation\n}",
+                    "Tight Bound: Theta(" + (algorithm.getTimeComplexity() != null ? algorithm.getTimeComplexity() : "N log N") + ") | Space: Theta(" + (algorithm.getSpaceComplexity() != null ? algorithm.getSpaceComplexity() : "1") + ")",
+                    "• High-throughput enterprise pipelines\n• Competitive programming constraints",
+                    "• Unconstrained memory environments where cache misses dominate",
+                    "• Micro-architectural optimization potential\n• Strict mathematical correctness proofs",
+                    "• Implementation complexity and high engineering overhead",
+                    "• Ignoring CPU cache line sizes and memory alignment",
+                    "Be prepared to solve follow-up constraints like O(1) extra space or streaming input.",
+                    "Consider lock-free or SIMD vectorization for high-concurrency systems.",
+                    adv,
+                    defaultPractice
+            );
+        }
     }
 
     private AlgorithmCategoryResponse mapCategory(AlgorithmCategory category) {
