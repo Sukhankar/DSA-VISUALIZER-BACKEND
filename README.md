@@ -5,6 +5,7 @@
 ![Java 21](https://img.shields.io/badge/Java-21_LTS-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4+-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Apache Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?style=for-the-badge&logo=apachekafka&logoColor=white)
 ![Flyway](https://img.shields.io/badge/Flyway-Migration-CC0200?style=for-the-badge&logo=flyway&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Build](https://img.shields.io/badge/Build-Passing-brightgreen?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -52,6 +53,10 @@ graph TD
         Registry --> SmartFallback[🧠 Smart Fallback Pedagogical Generator Engine]
     end
 
+    subgraph Messaging & Async Event Bus
+        AnalyticsSvc & PracticeSvc -.-> Kafka[📡 Apache Kafka Event Bus / Broker]
+    end
+
     subgraph Data & Persistence Infrastructure
         AuthSvc & VisSvc & PracticeSvc & AnalyticsSvc & ProblemSvc --> JPA[🗄️ Spring Data JPA Repositories]
         JPA --> DB[(🐘 PostgreSQL Database)]
@@ -81,7 +86,8 @@ graph TD
 - **Session State Lifecycle**: Session initialization, live submission evaluation, real-time feedback, and session completion tracking (`/api/v1/practice/sessions/*`).
 - **Daily Challenge Engine**: Automated daily problem rotation with bonus XP multipliers.
 
-### 4. 📊 Analytics, XP Ledger & Leaderboards
+### 4. 📊 Analytics, XP Ledger & Event Streaming
+- **Event Streaming**: Integrated **Apache Kafka** (`spring-boot-starter-kafka`) for asynchronous event publishing (practice submissions, XP updates, telemetry).
 - **Heatmap Analytics**: Daily activity tracking powering GitHub-style activity heatmaps.
 - **Gamification Engine**: Dynamic XP calculations, level progression curves, streak freeze mechanics, and badge unlocks.
 - **Global Leaderboards**: Real-time ranking of top learners by total XP (`/api/v1/analytics/leaderboard`).
@@ -95,6 +101,7 @@ graph TD
 | **Language** | Java | 21 (LTS) | Modern Java features (Virtual Threads, Records, Pattern Matching) |
 | **Framework** | Spring Boot | 3.4.3 | Enterprise REST framework |
 | **Security** | Spring Security | 6.x | JWT authentication & BCrypt encryption |
+| **Messaging & Events**| Apache Kafka | 3.x | Event-driven messaging & streaming (`spring-boot-starter-kafka`) |
 | **Database** | PostgreSQL | 16+ | Relational persistence store |
 | **Migrations** | Flyway | 10.x | Versioned database schema & seed migrations (`V1` to `V22`) |
 | **Containerization** | Docker | 24+ | Multi-stage Alpine container runtime |
@@ -126,6 +133,7 @@ graph TD
 - **Java 21** or higher
 - **Maven 3.9+** (or use included `./mvnw`)
 - **PostgreSQL 16+** running on `localhost:5432`
+- **Apache Kafka** (optional for async events) running on `localhost:9092`
 
 ### 1. Database Setup
 Create the target PostgreSQL database:
@@ -134,12 +142,13 @@ CREATE DATABASE dsa_visualizer;
 ```
 
 ### 2. Configure Environment Variables / Properties
-Default values are set in `src/main/resources/application.properties`. You can override them using environment variables:
+Default values are set in `src/main/resources/application.yml` and `application.properties`. Override using environment variables:
 ```bash
 export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/dsa_visualizer
 export SPRING_DATASOURCE_USERNAME=postgres
 export SPRING_DATASOURCE_PASSWORD=postgres
 export JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+export KAFKA_SERVERS=localhost:9092
 ```
 
 ### 3. Run Application
@@ -164,6 +173,7 @@ docker run -d -p 8080:8080 \
   -e SPRING_DATASOURCE_USERNAME=postgres \
   -e SPRING_DATASOURCE_PASSWORD=postgres \
   -e JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970 \
+  -e KAFKA_SERVERS=host.docker.internal:9092 \
   --name dsa-backend codeloom-dsa-backend
 ```
 
