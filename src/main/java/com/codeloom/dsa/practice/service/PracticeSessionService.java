@@ -7,6 +7,8 @@ import com.codeloom.dsa.analytics.dto.UserXpDto;
 import com.codeloom.dsa.analytics.service.AnalyticsService;
 import com.codeloom.dsa.analytics.service.GamificationService;
 import com.codeloom.dsa.common.exception.ResourceNotFoundException;
+import com.codeloom.dsa.notification.entity.NotificationType;
+import com.codeloom.dsa.notification.service.NotificationService;
 import com.codeloom.dsa.practice.dto.*;
 import com.codeloom.dsa.practice.entity.*;
 import com.codeloom.dsa.practice.repository.PracticeSessionProblemRepository;
@@ -47,6 +49,7 @@ public class PracticeSessionService {
     private final GamificationService gamificationService;
     private final AnalyticsService analyticsService;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public PracticeSessionService(
             PracticeSessionRepository sessionRepository,
@@ -59,7 +62,8 @@ public class PracticeSessionService {
             DailyChallengeService dailyChallengeService,
             GamificationService gamificationService,
             AnalyticsService analyticsService,
-            UserRepository userRepository
+            UserRepository userRepository,
+            NotificationService notificationService
     ) {
         this.sessionRepository = sessionRepository;
         this.sessionProblemRepository = sessionProblemRepository;
@@ -72,6 +76,7 @@ public class PracticeSessionService {
         this.gamificationService = gamificationService;
         this.analyticsService = analyticsService;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     public PracticeSessionDto createSession(String userIdentifier, CreatePracticeSessionRequest request) {
@@ -194,6 +199,13 @@ public class PracticeSessionService {
             );
 
             gamificationService.processActivity(user, "PRACTICE_SESSION_COMPLETE", 0, "Completed session");
+
+            notificationService.sendNotification(
+                    user,
+                    "Practice Session Completed! ⚡",
+                    "You completed the " + session.getMode() + " session and earned +" + bonusSessionXp + " Bonus XP!",
+                    NotificationType.PRACTICE
+            );
         }
 
         sessionRepository.save(session);

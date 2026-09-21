@@ -2,6 +2,8 @@ package com.codeloom.dsa.analytics.service;
 
 import com.codeloom.dsa.analytics.entity.*;
 import com.codeloom.dsa.analytics.repository.*;
+import com.codeloom.dsa.notification.entity.NotificationType;
+import com.codeloom.dsa.notification.service.NotificationService;
 import com.codeloom.dsa.profile.entity.UserProfile;
 import com.codeloom.dsa.user.entity.User;
 import org.springframework.stereotype.Service;
@@ -17,15 +19,18 @@ public class BadgeEngine {
     private final BadgeRepository badgeRepository;
     private final UserBadgeRepository userBadgeRepository;
     private final UserActivityRepository userActivityRepository;
+    private final NotificationService notificationService;
 
     public BadgeEngine(
             BadgeRepository badgeRepository,
             UserBadgeRepository userBadgeRepository,
-            UserActivityRepository userActivityRepository
+            UserActivityRepository userActivityRepository,
+            NotificationService notificationService
     ) {
         this.badgeRepository = badgeRepository;
         this.userBadgeRepository = userBadgeRepository;
         this.userActivityRepository = userActivityRepository;
+        this.notificationService = notificationService;
     }
 
     public List<Badge> evaluateBadges(User user, UserProfile profile) {
@@ -52,6 +57,14 @@ public class BadgeEngine {
                         "Earned badge: " + badge.getName()
                 );
                 userActivityRepository.save(activity);
+
+                // Dispatch notification
+                notificationService.sendNotification(
+                        user,
+                        "New Badge Unlocked 🎖",
+                        "You earned the '" + badge.getName() + "' badge.",
+                        NotificationType.BADGE
+                );
 
                 newlyUnlocked.add(badge);
             }

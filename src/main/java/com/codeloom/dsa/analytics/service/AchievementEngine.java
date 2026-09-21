@@ -2,6 +2,8 @@ package com.codeloom.dsa.analytics.service;
 
 import com.codeloom.dsa.analytics.entity.*;
 import com.codeloom.dsa.analytics.repository.*;
+import com.codeloom.dsa.notification.entity.NotificationType;
+import com.codeloom.dsa.notification.service.NotificationService;
 import com.codeloom.dsa.profile.entity.UserProfile;
 import com.codeloom.dsa.profile.repository.UserProfileRepository;
 import com.codeloom.dsa.user.entity.User;
@@ -22,6 +24,7 @@ public class AchievementEngine {
     private final UserXpTransactionRepository xpTransactionRepository;
     private final UserXpRepository userXpRepository;
     private final XpLedgerRepository xpLedgerRepository;
+    private final NotificationService notificationService;
 
     public AchievementEngine(
             AchievementRepository achievementRepository,
@@ -30,7 +33,8 @@ public class AchievementEngine {
             UserActivityRepository userActivityRepository,
             UserXpTransactionRepository xpTransactionRepository,
             UserXpRepository userXpRepository,
-            XpLedgerRepository xpLedgerRepository
+            XpLedgerRepository xpLedgerRepository,
+            NotificationService notificationService
     ) {
         this.achievementRepository = achievementRepository;
         this.userAchievementRepository = userAchievementRepository;
@@ -39,6 +43,7 @@ public class AchievementEngine {
         this.xpTransactionRepository = xpTransactionRepository;
         this.userXpRepository = userXpRepository;
         this.xpLedgerRepository = xpLedgerRepository;
+        this.notificationService = notificationService;
     }
 
     public List<Achievement> evaluateAchievements(User user, UserProfile profile) {
@@ -55,6 +60,14 @@ public class AchievementEngine {
                 // Unlock achievement
                 UserAchievement userAchievement = new UserAchievement(user, achievement);
                 userAchievementRepository.save(userAchievement);
+
+                // Dispatch real notification
+                notificationService.sendNotification(
+                        user,
+                        "Achievement Unlocked! 🏆",
+                        "You earned the '" + achievement.getName() + "' achievement (+ " + achievement.getXpReward() + " XP).",
+                        NotificationType.ACHIEVEMENT
+                );
 
                 // Award XP for achievement if reward > 0
                 if (achievement.getXpReward() > 0) {
