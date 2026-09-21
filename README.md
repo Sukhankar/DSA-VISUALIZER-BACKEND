@@ -61,6 +61,12 @@ The **CodeLoom Backend Core** is an enterprise-grade RESTful service built with 
 
 ## 🏛️ SYSTEM ARCHITECTURE
 
+<div align="center">
+  <img src="docs/system-architecture.svg" alt="CodeLoom System Architecture" width="100%" />
+</div>
+
+<br/>
+
 ```mermaid
 graph TD
     Client[🌐 React Web Client] -->|REST / JSON + Bearer JWT| Security[🔒 Spring Security Filter Chain]

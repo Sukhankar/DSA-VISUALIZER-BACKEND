@@ -1,0 +1,246 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 880" width="100%" height="100%">
+  <defs>
+    <!-- Dark Background & Card Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080C14" />
+      <stop offset="50%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#030712" />
+    </linearGradient>
+
+    <linearGradient id="clientGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B132B" />
+      <stop offset="100%" stop-color="#1C2541" />
+    </linearGradient>
+
+    <linearGradient id="gatewayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E1B4B" />
+      <stop offset="100%" stop-color="#312E81" />
+    </linearGradient>
+
+    <linearGradient id="servicesGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064E3B" />
+      <stop offset="100%" stop-color="#065F46" />
+    </linearGradient>
+
+    <linearGradient id="infraGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#31103F" />
+      <stop offset="100%" stop-color="#4C1D95" />
+    </linearGradient>
+
+    <!-- Neon Accent Gradients -->
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#818CF8" />
+    </linearGradient>
+
+    <linearGradient id="emeraldGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+
+    <linearGradient id="amberGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+
+    <linearGradient id="pinkGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+
+    <!-- Drop Shadows and Filters -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#34D399" />
+    </marker>
+    <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#A855F7" />
+    </marker>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1200" height="880" rx="24" fill="url(#bgGrad)" />
+
+  <!-- Outer Blueprint Grid Pattern Accent -->
+  <path d="M 0 80 L 1200 80 M 0 240 L 1200 240 M 0 460 L 1200 460 M 0 680 L 1200 680" stroke="#1E293B" stroke-width="1" stroke-dasharray="4 8" opacity="0.3" />
+
+  <!-- Title Header -->
+  <g transform="translate(50, 45)">
+    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="28" fill="#F8FAFC" letter-spacing="0.5">
+      CodeLoom <tspan fill="#38BDF8">System Architecture</tspan>
+    </text>
+    <text x="0" y="22" font-family="monospace" font-size="12" fill="#94A3B8" letter-spacing="1">
+      FULL-STACK ALGORITHM PLAYGROUND, SSE REAL-TIME ENGINE &amp; EVENT STREAMING
+    </text>
+  </g>
+
+  <!-- ==================== LAYER 1: CLIENT FRONTEND ==================== -->
+  <g transform="translate(50, 100)">
+    <rect width="1100" height="130" rx="16" fill="url(#clientGrad)" stroke="#38BDF8" stroke-width="1.5" filter="url(#glow)" opacity="0.9" />
+    <rect width="1100" height="130" rx="16" fill="none" stroke="#38BDF8" stroke-width="1" stroke-dasharray="8 8" opacity="0.4" />
+    
+    <text x="24" y="32" font-family="system-ui" font-weight="700" font-size="14" fill="#38BDF8" letter-spacing="1">
+      🖥️ CLIENT FRONTEND LAYER (React 18 + Vite + Tailwind CSS)
+    </text>
+
+    <!-- Sub components -->
+    <g transform="translate(24, 48)">
+      <!-- Interactive Visualizer -->
+      <rect width="240" height="64" rx="10" fill="#091026" stroke="#1E293B" stroke-width="1.5" />
+      <text x="16" y="28" font-family="system-ui" font-weight="600" font-size="13" fill="#E2E8F0">Algorithm Renderers</text>
+      <text x="16" y="46" font-family="monospace" font-size="11" fill="#64748B">Sorting • Graph • DP • Tree • 2D</text>
+
+      <!-- Practice Arena & Code Editor -->
+      <rect x="256" width="250" height="64" rx="10" fill="#091026" stroke="#1E293B" stroke-width="1.5" />
+      <text x="272" y="28" font-family="system-ui" font-weight="600" font-size="13" fill="#E2E8F0">Practice Arena &amp; Code Sandbox</text>
+      <text x="272" y="46" font-family="monospace" font-size="11" fill="#64748B">Code Editor • Test Cases • Runner</text>
+
+      <!-- Gamification Dashboard -->
+      <rect x="522" width="260" height="64" rx="10" fill="#091026" stroke="#1E293B" stroke-width="1.5" />
+      <text x="538" y="28" font-family="system-ui" font-weight="600" font-size="13" fill="#E2E8F0">Analytics &amp; Gamification Dashboard</text>
+      <text x="538" y="46" font-family="monospace" font-size="11" fill="#64748B">XP Ledger • Badges • Streak • Heatmap</text>
+
+      <!-- Real-Time SSE Listener -->
+      <rect x="798" width="254" height="64" rx="10" fill="#091026" stroke="#38BDF8" stroke-width="1.5" />
+      <circle cx="1028" cy="18" r="4" fill="#34D399" filter="url(#glow)" />
+      <text x="814" y="28" font-family="system-ui" font-weight="600" font-size="13" fill="#38BDF8">SSE EventSource Notification Menu</text>
+      <text x="814" y="46" font-family="monospace" font-size="11" fill="#94A3B8">Live Stream • Event Listener • Bell UI</text>
+    </g>
+  </g>
+
+  <!-- Connectors: Layer 1 to Layer 2 -->
+  <path d="M 300 230 L 300 270" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="4 4" />
+  <text x="310" y="255" font-family="monospace" font-size="10" fill="#38BDF8">REST HTTP/JSON</text>
+
+  <path d="M 920 230 L 920 270" stroke="#34D399" stroke-width="2" marker-end="url(#arrowGreen)" />
+  <text x="930" y="255" font-family="monospace" font-size="10" fill="#34D399">SSE Stream (text/event-stream)</text>
+
+  <!-- ==================== LAYER 2: GATEWAY & SECURITY ==================== -->
+  <g transform="translate(50, 275)">
+    <rect width="1100" height="110" rx="16" fill="url(#gatewayGrad)" stroke="#818CF8" stroke-width="1.5" opacity="0.9" />
+    
+    <text x="24" y="28" font-family="system-ui" font-weight="700" font-size="14" fill="#A5B4FC" letter-spacing="1">
+      🛡️ GATEWAY &amp; SECURITY LAYER (Nginx Reverse Proxy + Spring Security + JWT)
+    </text>
+
+    <g transform="translate(24, 42)">
+      <rect width="320" height="52" rx="8" fill="#111827" stroke="#312E81" stroke-width="1.5" />
+      <text x="16" y="24" font-family="system-ui" font-weight="600" font-size="12" fill="#E2E8F0">Nginx Reverse Proxy</text>
+      <text x="16" y="40" font-family="monospace" font-size="10" fill="#94A3B8">SSL Termination • CORS Handling • Gzip</text>
+
+      <rect x="350" width="370" height="52" rx="8" fill="#111827" stroke="#312E81" stroke-width="1.5" />
+      <text x="366" y="24" font-family="system-ui" font-weight="600" font-size="12" fill="#E2E8F0">Stateless Security Filter Chain</text>
+      <text x="366" y="40" font-family="monospace" font-size="10" fill="#94A3B8">Role RBAC Guard • BCrypt Encoder • Public Endpoints</text>
+
+      <rect x="736" width="316" height="52" rx="8" fill="#111827" stroke="#818CF8" stroke-width="1.5" />
+      <text x="752" y="24" font-family="system-ui" font-weight="600" font-size="12" fill="#A5B4FC">JwtAuthenticationFilter</text>
+      <text x="752" y="40" font-family="monospace" font-size="10" fill="#94A3B8">Bearer Header &amp; Query Token Fallback</text>
+    </g>
+  </g>
+
+  <!-- Connectors: Layer 2 to Layer 3 -->
+  <path d="M 600 385 L 600 425" stroke="#818CF8" stroke-width="2" marker-end="url(#arrow)" />
+  <text x="610" y="410" font-family="monospace" font-size="10" fill="#818CF8">Authenticated Principal Context</text>
+
+  <!-- ==================== LAYER 3: CORE SERVICES ENGINE ==================== -->
+  <g transform="translate(50, 430)">
+    <rect width="1100" height="195" rx="16" fill="url(#servicesGrad)" stroke="#34D399" stroke-width="1.5" opacity="0.9" />
+    
+    <text x="24" y="28" font-family="system-ui" font-weight="700" font-size="14" fill="#6EE7B7" letter-spacing="1">
+      ⚙️ CORE APPLICATION MICRO-SERVICES (Spring Boot 3.4 + Java 21 LTS Engine)
+    </text>
+
+    <g transform="translate(24, 44)">
+      <!-- Box 1: Visualization Engine -->
+      <rect width="250" height="130" rx="10" fill="#022C22" stroke="#059669" stroke-width="1.5" />
+      <text x="16" y="26" font-family="system-ui" font-weight="700" font-size="13" fill="#6EE7B7">Visualization Strategy Engine</text>
+      <text x="16" y="46" font-family="monospace" font-size="10" fill="#A7F3D0">• Sorting &amp; Search Generators</text>
+      <text x="16" y="62" font-family="monospace" font-size="10" fill="#A7F3D0">• Graph BFS / DFS / Dijkstra</text>
+      <text x="16" y="78" font-family="monospace" font-size="10" fill="#A7F3D0">• Tree AVL / BST Traversal</text>
+      <text x="16" y="94" font-family="monospace" font-size="10" fill="#A7F3D0">• Dynamic Programming Grids</text>
+      <text x="16" y="110" font-family="monospace" font-size="10" fill="#A7F3D0">• Step Snapshot Contract Generator</text>
+
+      <!-- Box 2: Practice Arena & Code Execution -->
+      <rect x="266" width="260" height="130" rx="10" fill="#022C22" stroke="#059669" stroke-width="1.5" />
+      <text x="282" y="26" font-family="system-ui" font-weight="700" font-size="13" fill="#6EE7B7">Practice Arena &amp; Execution</text>
+      <text x="282" y="46" font-family="monospace" font-size="10" fill="#A7F3D0">• Practice Session Manager</text>
+      <text x="282" y="62" font-family="monospace" font-size="10" fill="#A7F3D0">• Problem Submission Engine</text>
+      <text x="282" y="78" font-family="monospace" font-size="10" fill="#A7F3D0">• TestCase Evaluation Verdicts</text>
+      <text x="282" y="94" font-family="monospace" font-size="10" fill="#A7F3D0">• Code Execution Service</text>
+      <text x="282" y="110" font-family="monospace" font-size="10" fill="#A7F3D0">• Daily Challenge Engine</text>
+
+      <!-- Box 3: Gamification & Analytics -->
+      <rect x="542" width="260" height="130" rx="10" fill="#022C22" stroke="#059669" stroke-width="1.5" />
+      <text x="558" y="26" font-family="system-ui" font-weight="700" font-size="13" fill="#6EE7B7">Gamification &amp; Analytics Engine</text>
+      <text x="558" y="46" font-family="monospace" font-size="10" fill="#A7F3D0">• XP Ledger &amp; Level Calculator</text>
+      <text x="558" y="62" font-family="monospace" font-size="10" fill="#A7F3D0">• Daily Activity Streak Tracker</text>
+      <text x="558" y="78" font-family="monospace" font-size="10" fill="#A7F3D0">• Achievement Requirement Evaluator</text>
+      <text x="558" y="94" font-family="monospace" font-size="10" fill="#A7F3D0">• Badge Engine &amp; Rarity Engine</text>
+      <text x="558" y="110" font-family="monospace" font-size="10" fill="#A7F3D0">• Global Leaderboard Aggregator</text>
+
+      <!-- Box 4: Notification SSE Service -->
+      <rect x="818" width="234" height="130" rx="10" fill="#022C22" stroke="#34D399" stroke-width="1.5" />
+      <text x="834" y="26" font-family="system-ui" font-weight="700" font-size="13" fill="#34D399">Notification Service (SSE)</text>
+      <text x="834" y="46" font-family="monospace" font-size="10" fill="#A7F3D0">• Concurrent SseEmitter Map</text>
+      <text x="834" y="62" font-family="monospace" font-size="10" fill="#A7F3D0">• Persistent DB Storage</text>
+      <text x="834" y="78" font-family="monospace" font-size="10" fill="#A7F3D0">• Achievement / Badge Trigger</text>
+      <text x="834" y="94" font-family="monospace" font-size="10" fill="#A7F3D0">• Practice Complete Push</text>
+      <text x="834" y="110" font-family="monospace" font-size="10" fill="#A7F3D0">• Timeout &amp; Error Cleaners</text>
+    </g>
+  </g>
+
+  <!-- Connectors: Layer 3 to Layer 4 -->
+  <path d="M 240 625 L 240 675" stroke="#34D399" stroke-width="2" marker-end="url(#arrowGreen)" />
+  <path d="M 520 625 L 520 675" stroke="#FBBF24" stroke-width="2" marker-end="url(#arrow)" />
+  <path d="M 800 625 L 800 675" stroke="#C084FC" stroke-width="2" marker-end="url(#arrowPurple)" />
+  <path d="M 1000 625 L 1000 675" stroke="#EC4899" stroke-width="2" marker-end="url(#arrowPurple)" />
+
+  <!-- ==================== LAYER 4: DATA & INFRASTRUCTURE ==================== -->
+  <g transform="translate(50, 680)">
+    <rect width="1100" height="150" rx="16" fill="url(#infraGrad)" stroke="#C084FC" stroke-width="1.5" opacity="0.9" />
+    
+    <text x="24" y="28" font-family="system-ui" font-weight="700" font-size="14" fill="#E9D5FF" letter-spacing="1">
+      💾 DATA &amp; ASYNC INFRASTRUCTURE LAYER (PostgreSQL 17 + Redis 8 + Kafka 4 + Docker)
+    </text>
+
+    <g transform="translate(24, 42)">
+      <!-- PostgreSQL -->
+      <rect width="250" height="90" rx="10" fill="#180B26" stroke="#9333EA" stroke-width="1.5" />
+      <text x="16" y="24" font-family="system-ui" font-weight="700" font-size="13" fill="#E9D5FF">PostgreSQL 17 Database</text>
+      <text x="16" y="42" font-family="monospace" font-size="10" fill="#C084FC">Flyway Automated Migrations (V1-V23)</text>
+      <text x="16" y="58" font-family="monospace" font-size="10" fill="#C084FC">Users • Submissions • Analytics • Practice</text>
+      <text x="16" y="74" font-family="monospace" font-size="10" fill="#C084FC">Notifications • Achievements • Badges</text>
+
+      <!-- Redis Cache -->
+      <rect x="266" width="260" height="90" rx="10" fill="#180B26" stroke="#DC2626" stroke-width="1.5" />
+      <text x="282" y="24" font-family="system-ui" font-weight="700" font-size="13" fill="#FCA5A5">Redis 8 In-Memory Cache</text>
+      <text x="282" y="42" font-family="monospace" font-size="10" fill="#F87171">High-Speed Session Caching</text>
+      <text x="282" y="58" font-family="monospace" font-size="10" fill="#F87171">Leaderboard ZSet Rankings</text>
+      <text x="282" y="74" font-family="monospace" font-size="10" fill="#F87171">Rate Limiting &amp; Real-time Counters</text>
+
+      <!-- Apache Kafka -->
+      <rect x="542" width="260" height="90" rx="10" fill="#180B26" stroke="#2563EB" stroke-width="1.5" />
+      <text x="558" y="24" font-family="system-ui" font-weight="700" font-size="13" fill="#93C5FD">Apache Kafka 4 Event Bus</text>
+      <text x="558" y="42" font-family="monospace" font-size="10" fill="#60A5FA">Async Execution Event Streams</text>
+      <text x="558" y="58" font-family="monospace" font-size="10" fill="#60A5FA">User Telemetry &amp; Log Auditing</text>
+      <text x="558" y="74" font-family="monospace" font-size="10" fill="#60A5FA">Decoupled Processing Topics</text>
+
+      <!-- Isolated Docker Sandbox -->
+      <rect x="818" width="234" height="90" rx="10" fill="#180B26" stroke="#0284C7" stroke-width="1.5" />
+      <text x="834" y="24" font-family="system-ui" font-weight="700" font-size="13" fill="#7DD3FC">Isolated Docker Sandbox</text>
+      <text x="834" y="42" font-family="monospace" font-size="10" fill="#38BDF8">Secure Multi-Language Execution</text>
+      <text x="834" y="58" font-family="monospace" font-size="10" fill="#38BDF8">Resource Cgroup Limits</text>
+      <text x="834" y="74" font-family="monospace" font-size="10" fill="#38BDF8">Strict Execution Timeouts</text>
+    </g>
+  </g>
+</svg>
